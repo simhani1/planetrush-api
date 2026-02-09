@@ -1,4 +1,4 @@
-package com.planetrush.planetrush.core.aop.annotation;
+package com.planetrush.planetrush.core.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
