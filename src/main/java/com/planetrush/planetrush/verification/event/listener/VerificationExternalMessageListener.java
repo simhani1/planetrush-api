@@ -18,7 +18,7 @@ public class VerificationExternalMessageListener {
 	private final VerificationMessagePublisher messagePublisher;
 
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-	public void publish(VerificationEvent event) {
+	public void publishMessageHandler(VerificationEvent event) {
 		log.info("[AFTER COMMIT] event {}", event);
 		messagePublisher.publish(event.toMessageCommand());
 	}
