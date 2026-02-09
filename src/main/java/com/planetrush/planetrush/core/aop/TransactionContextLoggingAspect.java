@@ -2,8 +2,11 @@ package com.planetrush.planetrush.core.aop;
 
 import javax.sql.DataSource;
 
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.datasource.ConnectionHolder;
 import org.springframework.stereotype.Component;
@@ -21,14 +24,16 @@ public class TransactionContextLoggingAspect {
 
 	private final DataSource dataSource;
 
-	@Before("execution(* com.planetrush.planetrush.verification.service.VerificationServiceImpl.verifyTodayChallenge(..))")
-	public void logVerifyTodayContext() {
-		logTransactionContext("verify-today");
+	@Pointcut("execution(public * com.planetrush.planetrush..*(..)) && "
+		+ "(@within(org.springframework.stereotype.Service) || @target(org.springframework.stereotype.Service))")
+	private void servicePublicMethods() {
 	}
 
-	@Before("execution(* com.planetrush.planetrush.outbox.VerificationExternalEventRecorder.save(..))")
-	public void logOutboxRecordContext() {
-		logTransactionContext("outbox-record");
+	@Before("servicePublicMethods()")
+	public void logServiceContext(JoinPoint joinPoint) {
+		MethodSignature signature = (MethodSignature)joinPoint.getSignature();
+		String action = signature.getDeclaringType().getSimpleName() + "." + signature.getMethod().getName();
+		logTransactionContext(action);
 	}
 
 	private void logTransactionContext(String action) {
@@ -40,7 +45,7 @@ public class TransactionContextLoggingAspect {
 		Integer connectionId = (resource instanceof ConnectionHolder holder)
 			? System.identityHashCode(holder.getConnection())
 			: null;
-		log.info("TxContext action={} active={} readOnly={} name={} resourceId={} connectionId={}",
+		log.info("[TxContext] action={} active={} readOnly={} name={} resourceId={} connectionId={}",
 			action, active, readOnly, name, resourceId, connectionId);
 	}
 }
