@@ -10,7 +10,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.planetrush.planetrush.fixture.MemberFixture;
@@ -19,15 +20,19 @@ import com.planetrush.planetrush.member.domain.Member;
 import com.planetrush.planetrush.outbox.VerificationExternalEventRecorder;
 import com.planetrush.planetrush.planet.domain.Planet;
 import com.planetrush.planetrush.verification.event.publisher.VerificationMessagePublisher;
+import com.planetrush.planetrush.verification.service.VerificationService;
 import com.planetrush.planetrush.verification.service.dto.VerificationDto;
 
 public class VerificationServiceIntegrationTest extends VerificationIntegrationTest {
 
-	@MockBean
-	VerificationExternalEventRecorder verificationExternalEventRecorder;
+	@Autowired
+	private VerificationService verificationService;
 
-	@MockBean
-	VerificationMessagePublisher verificationMessagePublisher;
+	@SpyBean
+	private VerificationExternalEventRecorder verificationExternalEventRecorder;
+
+	@SpyBean
+	private VerificationMessagePublisher verificationMessagePublisher;
 
 	@DisplayName("verifyTodayChallenge 호출 시 이벤트가 발행되고 결과가 저장된다.")
 	@Test
@@ -71,12 +76,12 @@ public class VerificationServiceIntegrationTest extends VerificationIntegrationT
 
 		doAnswer(invocation -> {
 			beforeCommitActive.set(TransactionSynchronizationManager.isActualTransactionActive());
-			return null;
+			return invocation.callRealMethod();
 		}).when(verificationExternalEventRecorder).save(any());
 
 		doAnswer(invocation -> {
 			afterCommitActive.set(TransactionSynchronizationManager.isActualTransactionActive());
-			return null;
+			return invocation.callRealMethod();
 		}).when(verificationMessagePublisher).publish(any());
 
 		VerificationDto dto = VerificationDto.builder()

@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.planetrush.planetrush.outbox.domain.EventType;
 import com.planetrush.planetrush.outbox.domain.OutboxEvent;
 import com.planetrush.planetrush.outbox.dto.OutboxRecordCommand;
+import com.planetrush.planetrush.outbox.exception.NoOutboxEventException;
 import com.planetrush.planetrush.outbox.repository.OutboxRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -46,5 +47,11 @@ public class VerificationExternalEventRecorder {
 		} catch (JsonProcessingException e) {
 			throw new IllegalStateException("Failed to serialize verification outbox payload", e);
 		}
+	}
+
+	@Transactional(readOnly = true)
+	public OutboxEvent findById(String eventId) {
+		return outboxRepository.findById(eventId)
+			.orElseThrow(() -> new NoOutboxEventException("No outbox event with id " + eventId));
 	}
 }

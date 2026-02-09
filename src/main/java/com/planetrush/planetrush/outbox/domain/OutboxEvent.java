@@ -63,4 +63,8 @@ public class OutboxEvent {
 	public static OutboxEvent pending(String id, EventType eventType, String payload) {
 		return new OutboxEvent(id, eventType, payload, OutboxStatus.PENDING);
 	}
+
+	public void published() {
+		this.status = OutboxStatus.PUBLISHED;
+	}
 }
