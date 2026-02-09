@@ -11,12 +11,12 @@ import com.planetrush.planetrush.planet.domain.Planet;
 import com.planetrush.planetrush.planet.exception.PlanetNotFoundException;
 import com.planetrush.planetrush.planet.repository.PlanetRepository;
 import com.planetrush.planetrush.verification.domain.VerificationRecord;
-import com.planetrush.planetrush.verification.event.AsyncVerificationProcessor;
 import com.planetrush.planetrush.verification.event.SaveVerificationResultEvent;
 import com.planetrush.planetrush.verification.exception.AlreadyVerifiedException;
 import com.planetrush.planetrush.verification.repository.VerificationRecordRepository;
 import com.planetrush.planetrush.verification.repository.custom.VerificationRecordRepositoryCustom;
 import com.planetrush.planetrush.verification.service.dto.VerificationDto;
+import com.planetrush.planetrush.verification.service.dto.VerificationEvent;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class VerificationServiceImpl implements VerificationService {
 
-	private final AsyncVerificationProcessor asyncVerifyProcessor;
+	private final VerificationEventService eventService;
 
 	private final MemberRepository memberRepository;
 	private final PlanetRepository planetRepository;
@@ -71,13 +71,12 @@ public class VerificationServiceImpl implements VerificationService {
 				"Member: " + member.getId() + ", Planet : " + planet.getId() + " already verified today");
 		}
 
-		String standardImgUrl = planet.getStandardVerificationImg();
-		asyncVerifyProcessor.initiateSimilarityCheck(VerificationDto.builder()
-			.standardImgUrl(standardImgUrl)
-			.verificationImgUrl(dto.getVerificationImgUrl())
-			.memberId(dto.getMemberId())
-			.planetId(dto.getPlanetId())
-			.build());
+		eventService.publish(new VerificationEvent(
+			dto.getVerificationImgUrl(),
+			dto.getStandardImgUrl(),
+			member.getId(),
+			planet.getId()
+		));
 	}
 
 	/**
