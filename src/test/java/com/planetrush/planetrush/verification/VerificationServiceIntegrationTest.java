@@ -43,7 +43,5 @@ public class VerificationServiceIntegrationTest extends VerificationIntegrationT
 
 		// WHEN
 		verificationService.verifyTodayChallenge(dto);
-
-		// THEN
 	}
 }

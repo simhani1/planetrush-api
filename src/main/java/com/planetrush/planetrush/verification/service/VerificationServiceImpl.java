@@ -58,6 +58,7 @@ public class VerificationServiceImpl implements VerificationService {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Transactional
 	@Override
 	public void verifyTodayChallenge(VerificationDto dto) {
 		Member member = memberRepository.findById(dto.getMemberId())
