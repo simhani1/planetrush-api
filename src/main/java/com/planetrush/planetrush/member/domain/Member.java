@@ -96,6 +96,9 @@ public class Member {
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
 
+	@Column(name = "daily_verification_limit", nullable = false)
+	private int dailyVerificationLimit;
+
 	/**
 	 * 사용자의 정보가 마지막으로 수정된 일자입니다.
 	 */
@@ -119,6 +122,7 @@ public class Member {
 		this.ci = ci;
 		this.provider = provider;
 		this.status = status;
+		this.dailyVerificationLimit = 5;
 	}
 
 	/**
@@ -188,7 +192,7 @@ public class Member {
 	@Override
 	public int hashCode() {
 		return Objects.hash(getId(), getNickname(), getEmail(), getCi(), getProvider(), getStatus(),
-			getResidents(), getCreatedAt(), getUpdatedAt());
+			getResidents(), getCreatedAt(), getUpdatedAt(), getDailyVerificationLimit());
 	}
 	
 }
