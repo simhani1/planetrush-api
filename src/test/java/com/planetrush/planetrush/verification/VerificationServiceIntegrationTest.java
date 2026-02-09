@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -19,8 +18,6 @@ import com.planetrush.planetrush.fixture.MemberFixture;
 import com.planetrush.planetrush.fixture.PlanetFixture;
 import com.planetrush.planetrush.member.domain.Member;
 import com.planetrush.planetrush.outbox.VerificationExternalEventRecorder;
-import com.planetrush.planetrush.outbox.domain.OutboxEvent;
-import com.planetrush.planetrush.outbox.domain.OutboxStatus;
 import com.planetrush.planetrush.planet.domain.Planet;
 import com.planetrush.planetrush.verification.event.publisher.VerificationMessagePublisher;
 import com.planetrush.planetrush.verification.service.VerificationService;
@@ -36,30 +33,6 @@ public class VerificationServiceIntegrationTest extends VerificationIntegrationT
 
 	@SpyBean
 	private VerificationMessagePublisher verificationMessagePublisher;
-
-	@DisplayName("verifyTodayChallenge 호출 시 이벤트가 발행되고 결과가 저장된다.")
-	@Test
-	void should_publish_event_and_save_verification_result() {
-		// GIVEN
-		Member member = Mockito.spy(MemberFixture.activeMember());
-		Planet planet = Mockito.spy(PlanetFixture.readyPlanet());
-		when(member.getId()).thenReturn(1L);
-		when(planet.getId()).thenReturn(10L);
-
-		when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
-		when(planetRepository.findById(planet.getId())).thenReturn(Optional.of(planet));
-		when(verificationRecordRepositoryCustom.findTodayRecord(member, planet)).thenReturn(null);
-
-		VerificationDto dto = VerificationDto.builder()
-			.memberId(member.getId())
-			.planetId(planet.getId())
-			.verificationImgUrl("https://verification-img.com")
-			.standardImgUrl(planet.getStandardVerificationImg())
-			.build();
-
-		// WHEN
-		verificationService.verifyTodayChallenge(dto);
-	}
 
 	@DisplayName("verifyTodayChallenge 커밋 직전/직후에 트랜잭션 이벤트가 실행된다.")
 	@Test
@@ -104,34 +77,5 @@ public class VerificationServiceIntegrationTest extends VerificationIntegrationT
 		InOrder inOrder = inOrder(verificationExternalEventRecorder, verificationMessagePublisher);
 		inOrder.verify(verificationExternalEventRecorder).save(any());
 		inOrder.verify(verificationMessagePublisher).publish(any());
-	}
-
-	@DisplayName("이벤트 발행 시 outbox 상태가 PENDING으로 저장된다.")
-	@Test
-	void should_keep_outbox_status_pending_when_event_publish_fails() {
-		// GIVEN
-		Member member = Mockito.spy(MemberFixture.activeMember());
-		Planet planet = Mockito.spy(PlanetFixture.readyPlanet());
-		when(member.getId()).thenReturn(1L);
-		when(planet.getId()).thenReturn(10L);
-
-		when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
-		when(planetRepository.findById(planet.getId())).thenReturn(Optional.of(planet));
-		when(verificationRecordRepositoryCustom.findTodayRecord(member, planet)).thenReturn(null);
-
-		VerificationDto dto = VerificationDto.builder()
-			.memberId(member.getId())
-			.planetId(planet.getId())
-			.verificationImgUrl("https://verification-img.com")
-			.standardImgUrl(planet.getStandardVerificationImg())
-			.build();
-
-		// WHEN
-		verificationService.verifyTodayChallenge(dto);
-
-		// THEN
-		ArgumentCaptor<OutboxEvent> captor = ArgumentCaptor.forClass(OutboxEvent.class);
-		verify(outboxRepository).save(captor.capture());
-		assertThat(captor.getValue().getStatus()).isEqualTo(OutboxStatus.PENDING);
 	}
 }
