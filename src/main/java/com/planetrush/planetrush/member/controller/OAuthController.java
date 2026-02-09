@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.planetrush.planetrush.core.aop.annotation.RequireJwtToken;
+import com.planetrush.planetrush.core.annotation.RequireJwtToken;
 import com.planetrush.planetrush.core.aop.member.MemberContext;
 import com.planetrush.planetrush.core.template.response.BaseResponse;
 import com.planetrush.planetrush.member.controller.request.KakaoLoginReq;

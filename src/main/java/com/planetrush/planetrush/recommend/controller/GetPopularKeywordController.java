@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.planetrush.planetrush.core.aop.annotation.RequireJwtToken;
+import com.planetrush.planetrush.core.annotation.RequireJwtToken;
 import com.planetrush.planetrush.core.template.response.BaseResponse;
 import com.planetrush.planetrush.recommend.service.GetPopularKeywordService;
 import com.planetrush.planetrush.recommend.service.dto.GetPopularKeywordDto;

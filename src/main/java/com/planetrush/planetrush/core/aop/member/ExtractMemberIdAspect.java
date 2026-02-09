@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.planetrush.planetrush.core.aop.annotation.RequireJwtToken;
+import com.planetrush.planetrush.core.annotation.RequireJwtToken;
 import com.planetrush.planetrush.core.jwt.JwtTokenProvider;
 
 import jakarta.servlet.http.HttpServletRequest;

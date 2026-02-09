@@ -11,7 +11,7 @@ import com.planetrush.planetrush.aws.controller.res.PresignedUrlRes;
 import com.planetrush.planetrush.aws.service.S3ImageServiceV2;
 import com.planetrush.planetrush.aws.service.dto.ImageType;
 import com.planetrush.planetrush.aws.service.dto.PresignedUrlDto;
-import com.planetrush.planetrush.core.aop.annotation.RequireJwtToken;
+import com.planetrush.planetrush.core.annotation.RequireJwtToken;
 import com.planetrush.planetrush.core.aop.member.MemberContext;
 
 import lombok.RequiredArgsConstructor;

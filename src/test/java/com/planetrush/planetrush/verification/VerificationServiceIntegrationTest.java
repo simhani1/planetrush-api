@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.planetrush.planetrush.fixture.MemberFixture;
 import com.planetrush.planetrush.fixture.PlanetFixture;
-import com.planetrush.planetrush.infra.flask.res.FlaskResponseDto;
 import com.planetrush.planetrush.member.domain.Member;
 import com.planetrush.planetrush.planet.domain.Planet;
 import com.planetrush.planetrush.verification.service.VerificationService;
@@ -35,15 +34,11 @@ public class VerificationServiceIntegrationTest extends VerificationIntegrationT
 		when(planetRepository.findById(planet.getId())).thenReturn(Optional.of(planet));
 		when(verificationRecordRepositoryCustom.findTodayRecord(member, planet)).thenReturn(null);
 
-		FlaskResponseDto flaskResponse = FlaskResponseDto.builder()
-			.verified(true)
-			.similarityScore(0.92)
-			.build();
-
 		VerificationDto dto = VerificationDto.builder()
 			.memberId(member.getId())
 			.planetId(planet.getId())
 			.verificationImgUrl("https://verification-img.com")
+			.standardImgUrl(planet.getStandardVerificationImg())
 			.build();
 
 		// WHEN
