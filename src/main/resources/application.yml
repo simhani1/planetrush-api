@@ -76,3 +76,9 @@ scheduled-task:
   change-planet-status-cron: 0 0 0 * * ?
   ban-if-last-verification-older-than-three-days: 0 5 0 * * ?
   planet-complete-destroy: 0 10 0 * * ?
+
+verification:
+  publisher:
+    type: redis-stream  # http -> RestClient를 사용한 api 호출
+  redis:
+    stream-key: verification:stream

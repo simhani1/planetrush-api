@@ -1,5 +1,6 @@
 package com.planetrush.planetrush.infra.publisher;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+	name = "verification.publisher.type",
+	havingValue = "http",
+	matchIfMissing = true
+)
 public class VerificationHttpSender implements VerificationMessagePublisher {
 
 	private final FlaskApiClient flaskApiClient;
