@@ -25,7 +25,7 @@ public class TransactionContextLoggingAspect {
 	private final DataSource dataSource;
 
 	@Pointcut("execution(public * com.planetrush.planetrush..*(..)) && "
-		+ "(@within(org.springframework.stereotype.Service) || @target(org.springframework.stereotype.Service))")
+		+ "(@within(org.springframework.stereotype.Service) || @target(org.springframework.stereotype.Service) || @within(org.springframework.stereotype.Component) || @target(org.springframework.stereotype.Component))")
 	private void servicePublicMethods() {
 	}
 
