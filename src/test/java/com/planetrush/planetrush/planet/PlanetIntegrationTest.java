@@ -44,36 +44,33 @@ public class PlanetIntegrationTest extends IntegrationTest {
 	@Autowired
 	ResidentRepository residentRepository;
 
+	private Member member1;
+	private Member member2;
+	private Planet planet;
+
 	@BeforeEach
 	void setUp() {
 		List<Member> members = MemberFixture.activeMembers(2);
-		memberRepository.saveAll(members);
+		List<Member> savedMembers = memberRepository.saveAll(members);
+		member1 = savedMembers.get(0);
+		member2 = savedMembers.get(1);
 
-		Planet planet = PlanetFixture.readyPlanet();
-		planetRepository.save(planet);
+		planet = planetRepository.save(PlanetFixture.readyPlanet());
 
-		Resident resident = ResidentFixture.creator(members.get(0), planet);
+		Resident resident = ResidentFixture.creator(member1, planet);
 		residentRepository.save(resident);
 	}
 
 	@AfterEach
 	void clear() {
-		residentRepository.deleteAll();
-		planetRepository.deleteAll();
-		memberRepository.deleteAll();
+		residentRepository.deleteAll(residentRepository.findByPlanetId(planet.getId()));
+		planetRepository.deleteById(planet.getId());
+		memberRepository.deleteAllById(List.of(member1.getId(), member2.getId()));
 	}
 
 	@DisplayName("가입 및 탈퇴 요청의 순서가 보장된다.")
 	@RepeatedTest(100)
 	void should_guarantee_order_between_register_and_delete_requests() throws InterruptedException {
-		// GIVEN
-		List<Member> members = memberRepository.findAll();
-		Member member1 = members.get(0);
-		Member member2 = members.get(1);
-
-		List<Planet> planets = planetRepository.findAll();
-		Planet planet = planets.get(0);
-
 		PlanetSubscriptionDto registerDto = PlanetSubscriptionDto.builder()
 			.planetId(planet.getId())
 			.memberId(member2.getId())
@@ -135,14 +132,6 @@ public class PlanetIntegrationTest extends IntegrationTest {
 	@DisplayName("행성 가입이 탈퇴보다 먼저 요청될 경우 한 명의 거주자만 남는다.")
 	@Test
 	void should_leave_one_resident_when_register_before_delete() {
-		// GIVEN
-		List<Member> members = memberRepository.findAll();
-		Member member1 = members.get(0);
-		Member member2 = members.get(1);
-
-		List<Planet> planets = planetRepository.findAll();
-		Planet planet = planets.get(0);
-
 		PlanetSubscriptionDto registerDto = PlanetSubscriptionDto.builder()
 			.planetId(planet.getId())
 			.memberId(member2.getId())
@@ -167,14 +156,6 @@ public class PlanetIntegrationTest extends IntegrationTest {
 	@DisplayName("행성 탈퇴가 가입보다 먼저 요청될 경우 거주자는 0명이고 행성은 파괴된다.")
 	@Test
 	void should_destroy_planet_when_delete_before_register() {
-		// GIVEN
-		List<Member> members = memberRepository.findAll();
-		Member member1 = members.get(0);
-		Member member2 = members.get(1);
-
-		List<Planet> planets = planetRepository.findAll();
-		Planet planet = planets.get(0);
-
 		PlanetSubscriptionDto registerDto = PlanetSubscriptionDto.builder()
 			.planetId(planet.getId())
 			.memberId(member2.getId())
@@ -200,16 +181,9 @@ public class PlanetIntegrationTest extends IntegrationTest {
 	@DisplayName("10초 이내로 중복된 행성 가입 요청은 멱등성을 보장한다.")
 	@Test
 	void should_ensure_idempotency_when_duplicate_register_resident_within_ten_seconds() {
-		// GIVEN
-		List<Member> members = memberRepository.findAll();
-		Member member = members.get(1);
-
-		List<Planet> planets = planetRepository.findAll();
-		Planet planet = planets.get(0);
-
 		PlanetSubscriptionDto registerDto = PlanetSubscriptionDto.builder()
 			.planetId(planet.getId())
-			.memberId(member.getId())
+			.memberId(member2.getId())
 			.build();
 
 		// WHEN
@@ -246,16 +220,9 @@ public class PlanetIntegrationTest extends IntegrationTest {
 	@DisplayName("10초 이내로 중복된 행성 탈퇴 요청은 멱등성을 보장한다.")
 	@Test
 	void should_ensure_idempotency_when_duplicate_delete_resident_within_ten_seconds() {
-		// GIVEN
-		List<Member> members = memberRepository.findAll();
-		Member member = members.get(0);
-
-		List<Planet> planets = planetRepository.findAll();
-		Planet planet = planets.get(0);
-
 		PlanetSubscriptionDto deleteDto = PlanetSubscriptionDto.builder()
 			.planetId(planet.getId())
-			.memberId(member.getId())
+			.memberId(member1.getId())
 			.build();
 
 		// WHEN

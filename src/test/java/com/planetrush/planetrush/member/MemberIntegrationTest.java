@@ -78,7 +78,7 @@ public class MemberIntegrationTest extends IntegrationTest {
 		}
 
 		// THEN
-		Cache cache = cacheManager.getCache("challengeProgressAvg");
+		Cache cache = cacheManager.getCache("challenge-avg");
 		assertThat(cache).isNotNull()
 			.extracting(it -> it.get(member.getId())).isNotNull()
 			.extracting(it -> it.get()).isNotNull()
