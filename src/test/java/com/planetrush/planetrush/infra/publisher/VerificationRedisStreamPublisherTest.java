@@ -1,11 +1,8 @@
 package com.planetrush.planetrush.infra.publisher;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Map;
 
@@ -16,11 +13,13 @@ import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.planetrush.planetrush.outbox.VerificationExternalEventRecorder;
 import com.planetrush.planetrush.verification.service.dto.MessageCommand;
 
 class VerificationRedisStreamPublisherTest {
 
 	private StringRedisTemplate redisTemplate;
+	private VerificationExternalEventRecorder eventRecorder;
 	@SuppressWarnings("rawtypes")
 	private org.springframework.data.redis.core.StreamOperations streamOperations;
 	private VerificationRedisStreamPublisher publisher;
@@ -30,7 +29,7 @@ class VerificationRedisStreamPublisherTest {
 		redisTemplate = mock(StringRedisTemplate.class);
 		streamOperations = mock(org.springframework.data.redis.core.StreamOperations.class);
 		when(redisTemplate.opsForStream()).thenReturn(streamOperations);
-		publisher = new VerificationRedisStreamPublisher(redisTemplate);
+		publisher = new VerificationRedisStreamPublisher(redisTemplate, eventRecorder);
 		ReflectionTestUtils.setField(publisher, "streamKey", "verification:stream");
 	}
 
