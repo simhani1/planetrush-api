@@ -4,7 +4,6 @@ import javax.sql.DataSource;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.annotation.Profile;
@@ -29,7 +28,7 @@ public class TransactionContextLoggingAspect {
 	private void servicePublicMethods() {
 	}
 
-	@Before("servicePublicMethods()")
+	// @Before("servicePublicMethods()")
 	public void logServiceContext(JoinPoint joinPoint) {
 		MethodSignature signature = (MethodSignature)joinPoint.getSignature();
 		String action = signature.getDeclaringType().getSimpleName() + "." + signature.getMethod().getName();
