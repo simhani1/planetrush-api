@@ -1,11 +1,14 @@
 package com.planetrush.planetrush.member.service;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.planetrush.planetrush.core.jwt.JwtTokenProvider;
 import com.planetrush.planetrush.core.jwt.dto.JwtToken;
+import com.planetrush.planetrush.infra.oauth.dto.KakaoUserInfo;
 import com.planetrush.planetrush.infra.oauth.util.KakaoUtil;
 import com.planetrush.planetrush.member.domain.Member;
 import com.planetrush.planetrush.member.domain.Nickname;
@@ -32,6 +35,36 @@ public class OAuthServiceImpl implements OAuthService {
 	private final MemberRepository memberRepository;
 	private final ProgressAvgRepository progressAvgRepository;
 
+	@Override
+	public LoginDto login(String email, String nickname) {
+		Member member = Member.builder()
+			.email(email)
+			.nickname(nickname)
+			.ci(UUID.randomUUID().toString())
+			.provider(Provider.NORMAL)
+			.status(Status.ACTIVE)
+			.build();
+		memberRepository.save(member);
+
+		ProgressAvg progress = ProgressAvg.builder()
+			.member(member)
+			.totalAvg(-1.0)
+			.beautyAvg(-1.0)
+			.exerciseAvg(-1.0)
+			.lifeAvg(-1.0)
+			.studyAvg(-1.0)
+			.etcAvg(-1.0)
+			.build();
+		progressAvgRepository.save(progress);
+
+		JwtToken jwtToken = jwtTokenProvider.createToken(member.getId());
+		return LoginDto.builder()
+			.nickname(member.getNickname())
+			.accessToken(jwtToken.getAccessToken())
+			.refreshToken(jwtToken.getRefreshToken())
+			.build();
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * <br/>
@@ -39,16 +72,14 @@ public class OAuthServiceImpl implements OAuthService {
 	 */
 	@Override
 	public LoginDto kakaoLogin(String accessToken) {
-		// KakaoUserInfo kakaoUserInfo = kakaoUtil.getUserInfo(accessToken);
-		// String email = kakaoUserInfo.getKakaoAccount().getEmail();
-		String email = "test@gmail.com";
+		KakaoUserInfo kakaoUserInfo = kakaoUtil.getUserInfo(accessToken);
+		String email = kakaoUserInfo.getKakaoAccount().getEmail();
 		Member member = memberRepository.findByEmailAndProviderAndStatus(email, Provider.KAKAO, Status.ACTIVE);
 		/* 회원가입 진행 */
 		if (member == null) {
 			member = memberRepository.save(Member.builder()
 				.email(email)
-				// .ci(kakaoUserInfo.getId().toString())
-				.ci(accessToken)
+				.ci(kakaoUserInfo.getId().toString())
 				.nickname(Nickname.getRandomKoreanNickname())
 				.provider(Provider.KAKAO)
 				.status(Status.ACTIVE)

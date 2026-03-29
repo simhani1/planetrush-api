@@ -32,4 +32,6 @@ public interface OAuthService {
 	 * @return 새로운 액세스 토큰과 리프레시 토큰을 담고 있는 ReissueDto 객체
 	 */
 	ReissueDto reissueToken(String refreshToken);
+
+	LoginDto login(String email, String nickname);
 }

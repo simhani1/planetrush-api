@@ -1,5 +1,7 @@
 package com.planetrush.planetrush.core.config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -31,8 +33,13 @@ public class WebConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
+		List<String> patterns = List.of(
+			"/api/v1/auth/login/**",
+			"/api/v1/auth/reissue",
+			"/api/v1/planets/detail/**"
+		);
 		registry.addInterceptor(jwtInterceptor)
 			.addPathPatterns("/api/**")
-			.excludePathPatterns("/api/v1/auth/login/kakao", "/api/v1/auth/reissue", "/api/v1/planets/detail/**");
+			.excludePathPatterns(patterns);
 	}
 }

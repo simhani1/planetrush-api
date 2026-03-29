@@ -156,7 +156,7 @@ public class Member {
 	 * @return 10글자 초과 또는 비어있는지 여부
 	 */
 	private boolean checkNicknameLength(String nickname) {
-		return nickname.trim().isEmpty() || nickname.length() > 10;
+		return nickname.trim().isEmpty() || nickname.length() > 200;
 	}
 
 	/**

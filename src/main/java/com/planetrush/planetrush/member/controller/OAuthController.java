@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.planetrush.planetrush.core.annotation.RequireJwtToken;
@@ -34,6 +35,15 @@ public class OAuthController {
 	@PostMapping("/login/kakao")
 	public ResponseEntity<BaseResponse<LoginDto>> kakaoLogin(@RequestBody KakaoLoginReq req) {
 		LoginDto res = oAuthService.kakaoLogin(req.getAccessToken());
+		return ResponseEntity.ok(BaseResponse.ofSuccess(res));
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<BaseResponse<LoginDto>> login(
+		@RequestParam String email,
+		@RequestParam String nickname
+	) {
+		LoginDto res = oAuthService.login(email, nickname);
 		return ResponseEntity.ok(BaseResponse.ofSuccess(res));
 	}
 
