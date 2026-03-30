@@ -1,4 +1,4 @@
-package com.planetrush.planetrush.aws.service;
+package com.planetrush.planetrush.s3presign.service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,8 +12,8 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.planetrush.planetrush.aws.exception.S3Exception;
-import com.planetrush.planetrush.aws.service.dto.FileMetaInfo;
+import com.planetrush.planetrush.s3presign.exception.S3Exception;
+import com.planetrush.planetrush.s3presign.service.dto.FileMetaInfo;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

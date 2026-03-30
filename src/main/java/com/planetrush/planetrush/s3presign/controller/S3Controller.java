@@ -1,4 +1,4 @@
-package com.planetrush.planetrush.aws.controller;
+package com.planetrush.planetrush.s3presign.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -6,13 +6,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.planetrush.planetrush.aws.controller.req.PresignedUrlReq;
-import com.planetrush.planetrush.aws.controller.res.PresignedUrlRes;
-import com.planetrush.planetrush.aws.service.S3ImageServiceV2;
-import com.planetrush.planetrush.aws.service.dto.ImageType;
-import com.planetrush.planetrush.aws.service.dto.PresignedUrlDto;
 import com.planetrush.planetrush.core.annotation.RequireJwtToken;
 import com.planetrush.planetrush.core.aop.member.MemberContext;
+import com.planetrush.planetrush.s3presign.controller.req.PresignedUrlReq;
+import com.planetrush.planetrush.s3presign.controller.res.PresignedUrlRes;
+import com.planetrush.planetrush.s3presign.service.S3ImageServiceV2;
+import com.planetrush.planetrush.s3presign.service.dto.ImageType;
+import com.planetrush.planetrush.s3presign.service.dto.PresignedUrlDto;
 
 import lombok.RequiredArgsConstructor;
 

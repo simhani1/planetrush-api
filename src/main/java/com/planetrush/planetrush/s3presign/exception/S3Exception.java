@@ -1,4 +1,4 @@
-package com.planetrush.planetrush.aws.exception;
+package com.planetrush.planetrush.s3presign.exception;
 
 public class S3Exception extends RuntimeException {
 

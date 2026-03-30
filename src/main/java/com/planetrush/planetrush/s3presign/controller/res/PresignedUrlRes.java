@@ -1,4 +1,4 @@
-package com.planetrush.planetrush.aws.controller.res;
+package com.planetrush.planetrush.s3presign.controller.res;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

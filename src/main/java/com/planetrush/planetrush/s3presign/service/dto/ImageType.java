@@ -1,4 +1,4 @@
-package com.planetrush.planetrush.aws.service.dto;
+package com.planetrush.planetrush.s3presign.service.dto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import com.planetrush.planetrush.aws.service.dto.ImageType;
+import com.planetrush.planetrush.s3presign.service.dto.ImageType;
 
 class ImageTypeTest {
 

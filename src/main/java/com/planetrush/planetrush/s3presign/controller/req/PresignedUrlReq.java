@@ -1,4 +1,4 @@
-package com.planetrush.planetrush.aws.service.dto;
+package com.planetrush.planetrush.s3presign.controller.req;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -10,10 +10,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PresignedUrlDto {
+public class PresignedUrlReq {
 
-	private Long memberId;
-	private String originFileName;
-	private ImageType type;
-	private String preSignedUrl;
+	private String imageType;
+	private String fileName;
 }

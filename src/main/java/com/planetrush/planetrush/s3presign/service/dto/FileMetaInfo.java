@@ -1,4 +1,4 @@
-package com.planetrush.planetrush.aws.service.dto;
+package com.planetrush.planetrush.s3presign.service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.planetrush.planetrush.aws.service;
+package com.planetrush.planetrush.s3presign.service;
 
 import java.util.Date;
 
@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.planetrush.planetrush.aws.service.dto.ImageType;
-import com.planetrush.planetrush.aws.service.dto.PresignedUrlDto;
+import com.planetrush.planetrush.s3presign.service.dto.ImageType;
+import com.planetrush.planetrush.s3presign.service.dto.PresignedUrlDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
