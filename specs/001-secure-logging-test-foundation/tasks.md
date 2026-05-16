@@ -37,9 +37,9 @@ Single Spring Boot module:
 
 **Purpose**: 빌드 의존성과 디렉토리 준비.
 
-- [ ] T001 Add Testcontainers BOM + `junit-jupiter` + `mysql` modules to `build.gradle` (testImplementation), with comment citing constitution 원칙 I and research R-006 (라이선스/유지보수 점검 결과)
-- [ ] T002 [P] Create new package directory `src/main/java/com/planetrush/planetrush/core/logging/` with empty `package-info.java`
-- [ ] T003 [P] Add Docker prerequisite note to `README.md` (one line under existing Tools section): "통합 테스트는 Docker 런타임(Docker Desktop / OrbStack / Colima 등)을 요구합니다. 자세한 셋업은 `specs/001-.../quickstart.md` 참조."
+- [X] T001 Add Testcontainers BOM + `junit-jupiter` + `mysql` modules to `build.gradle` (testImplementation), with comment citing constitution 원칙 I and research R-006 (라이선스/유지보수 점검 결과)
+- [X] T002 [P] Create new package directory `src/main/java/com/planetrush/planetrush/core/logging/` with empty `package-info.java`
+- [X] T003 [P] Add Docker prerequisite note to `README.md` (one line under existing Tools section): "통합 테스트는 Docker 런타임(Docker Desktop / OrbStack / Colima 등)을 요구합니다. 자세한 셋업은 `specs/001-.../quickstart.md` 참조."
 
 **Checkpoint**: 의존성 해소 (`./gradlew dependencies | grep testcontainers` 확인), 빈 패키지 생성됨.
 
@@ -51,10 +51,10 @@ Single Spring Boot module:
 
 **⚠️ CRITICAL**: 이 페이즈가 끝나야 US1·US2·US3 진입 가능.
 
-- [ ] T004 Create `src/main/resources/logback-spring.xml` with appender wiring `%msk` conversion rule placeholder (MaskingPatternConverter 클래스는 T005에서 구현, XML에서는 `<conversionRule conversionWord="msk" converterClass="com.planetrush.planetrush.core.logging.MaskingPatternConverter"/>`로 선참조)
-- [ ] T005 [P] Implement skeleton class `src/main/java/com/planetrush/planetrush/core/logging/MaskingPatternConverter.java` extending `ch.qos.logback.classic.pattern.ClassicConverter` — 메서드는 일단 입력 그대로 반환(stub). T009에서 실제 마스킹 로직 추가.
-- [ ] T006 [P] Extend existing `src/test/java/com/planetrush/planetrush/IntegrationTest.java` to add Testcontainers MySQL(`mysql:8.0.36`) + Redis(`redis:7-alpine`) `@Container static` fields with `withReuse(true).withLabel("project", "planetrush-api")`, and inject `spring.datasource.*` + `spring.data.redis.*` via `@DynamicPropertySource`. Keep `@SpringBootTest`/`@ActiveProfiles("test")` and existing `@LocalServerPort` field. Add `@Testcontainers` class annotation.
-- [ ] T007 Add Gradle task `verifySecretLogScan` to `build.gradle` (Exec type, runs grep regex from research R-005 against `src/main`, fails build on match) and wire `tasks.named('check') { dependsOn 'verifySecretLogScan' }`
+- [X] T004 Create `src/main/resources/logback-spring.xml` with appender wiring `%msk` conversion rule placeholder (MaskingPatternConverter 클래스는 T005에서 구현, XML에서는 `<conversionRule conversionWord="msk" converterClass="com.planetrush.planetrush.core.logging.MaskingPatternConverter"/>`로 선참조)
+- [X] T005 [P] Implement skeleton class `src/main/java/com/planetrush/planetrush/core/logging/MaskingPatternConverter.java` extending `ch.qos.logback.classic.pattern.ClassicConverter` — 메서드는 일단 입력 그대로 반환(stub). T009에서 실제 마스킹 로직 추가.
+- [X] T006 [P] Extend existing `src/test/java/com/planetrush/planetrush/IntegrationTest.java` to add Testcontainers MySQL(`mysql:8.0.36`) + Redis(`redis:7-alpine`) `@Container static` fields with `withReuse(true).withLabel("project", "planetrush-api")`, and inject `spring.datasource.*` + `spring.data.redis.*` via `@DynamicPropertySource`. Keep `@SpringBootTest`/`@ActiveProfiles("test")` and existing `@LocalServerPort` field. Add `@Testcontainers` class annotation.
+- [X] T007 Add Gradle task `verifySecretLogScan` to `build.gradle` (Exec type, runs grep regex from research R-005 against `src/main`, fails build on match) and wire `tasks.named('check') { dependsOn 'verifySecretLogScan' }`
 
 **Checkpoint**: `./gradlew test` 통과 가능(컨버터는 stub, 마스킹 미동작이지만 빌드 OK). `verifySecretLogScan` 실행 시 현재 `JwtTokenProvider`의 평문 로그가 잡혀 빌드 실패 — 이는 의도된 상태(T010이 해결).
 
