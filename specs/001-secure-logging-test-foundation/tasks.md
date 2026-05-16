@@ -126,14 +126,15 @@ Single Spring Boot module:
 
 **Purpose**: 머지 가능 상태로 마무리.
 
-- [ ] T017 [P] Update root `README.md` Tools section: Testcontainers 추가, 통합 테스트 Docker 의존 명시(한 줄 + quickstart.md 링크).
-- [ ] T018 [P] Add or extend `.github/PULL_REQUEST_TEMPLATE.md` with section "## AI Review (Constitution VI)" requiring `- [ ] Claude Code 리뷰 첨부 (결과/채택·기각 사유)` and `- [ ] Codex 리뷰 첨부 (결과/채택·기각 사유)` checkboxes.
+- [X] T017 [P] Update root `README.md` Tools section: Testcontainers 추가, 통합 테스트 Docker 의존 명시(한 줄 + quickstart.md 링크). — T003에서 처리됨.
+- [X] T018 [P] Add or extend `.github/PULL_REQUEST_TEMPLATE.md` with section "## AI Review (Constitution VI)" requiring `- [ ] Claude Code 리뷰 첨부 (결과/채택·기각 사유)` and `- [ ] Codex 리뷰 첨부 (결과/채택·기각 사유)` checkboxes. — Constitution Check + Spec Reference + Verification 섹션도 함께 추가.
 - [ ] T019 Run full local validation per `specs/001-.../quickstart.md` §2~5 once:
   - `./gradlew clean check` 통과 (verifySecretLogScan 포함)
   - 로컬 MySQL/Redis 데몬 OFF 상태에서 `./gradlew test` 통과
   - `SPRING_PROFILES_ACTIVE=prod ./gradlew bootRun --args='--spring.config.import=optional:file:.env[.properties]'` 부팅 로그에 SQL 출력 0건
   - `grep -RIn "secret key:" src/main` 결과 0건
-- [ ] T020 Update Constitution Alignment table in `specs/001-.../plan.md` "Post-Design Constitution Re-Check" 섹션을 본 구현 완료 후 결과로 갱신 (모든 원칙 ✅ 확인 또는 위반 발견 시 Complexity Tracking 추가).
+  - Phase 4 완료 후 실시.
+- [X] T020 Update Constitution Alignment table in `specs/001-.../plan.md` "Post-Design Constitution Re-Check" 섹션을 본 구현 완료 후 결과로 갱신. Project Structure도 `IntegrationTest` 재활용 결정에 맞춰 정정. "Post-Implementation Constitution Re-Check" 섹션 신규 추가.
 
 **Checkpoint**: PR 머지 준비 완료.
 

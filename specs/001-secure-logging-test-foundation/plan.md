@@ -103,17 +103,18 @@ src/main/resources/
 └── logback-spring.xml                          # 신규: MaskingPatternConverter 등록
 
 src/test/java/com/planetrush/planetrush/
-├── support/                                    # 신규
-│   └── IntegrationTestSupport.java             # Testcontainers MySQL/Redis 베이스
-├── core/logging/                               # 신규
-│   └── MaskingPatternConverterTest.java        # 단위 테스트 (5종 키워드)
-├── planet/PlanetIntegrationTest.java           # 수정: IntegrationTestSupport 상속
-├── verification/                               # 수정: 상속 변경
-│   ├── VerificationServiceFailureIntegrationTest.java
-│   └── VerificationRedisStreamPublisherTest.java
-└── (외 통합 테스트 2종)                          # 수정: 상속 변경
+├── IntegrationTest.java                        # 수정: 기존 추상 베이스를 Testcontainers MySQL/Redis로 확장
+│                                               # (신규 IntegrationTestSupport 만들지 않고 기존 재활용 결정 — tasks.md 발견)
+├── core/
+│   ├── logging/                                # 신규
+│   │   └── MaskingPatternConverterTest.java    # 단위 테스트 (5종 키워드)
+│   ├── jwt/                                    # 신규
+│   │   └── JwtTokenProviderSecretLogTest.java  # ListAppender 로그 캡처 검증
+│   └── config/                                 # 신규
+│       └── ProdProfileBootTest.java            # application-prod.yml 키 검증
+└── (기존 통합 테스트 5종 자동 혜택: IntegrationTest 확장으로 데몬 의존 제거)
 
-build.gradle                                     # 수정: Testcontainers BOM + 2 modules
+build.gradle                                     # 수정: Testcontainers BOM + 2 modules + verifySecretLogScan 태스크
 ```
 
 **Structure Decision**: 단일 Spring Boot 모듈 유지. 마스킹 컨버터는 `core/logging` 신규 패키지(다른 core 유틸과 동일 레벨), 통합 테스트 베이스는 `test/.../support` 신규 패키지(컨스티튜션 원칙 II의 "테스트 인프라 내부 어댑터" 격리 위치). 멀티모듈 분리는 향후 별도 스펙.
@@ -137,8 +138,31 @@ build.gradle                                     # 수정: Testcontainers BOM + 
 
 ## Post-Design Constitution Re-Check
 
-Phase 1 완료 후 재검토 결과(아래 산출물 작성 후 갱신):
+Phase 1 (design) 완료 후 재검토:
 
 - Phase 1 산출물(research.md, quickstart.md) 작성에서 신규 위반 없음. ✅
 - `data-model.md`/`contracts/` 생략은 도메인·계약 변경 없음에 따른 의도된 N/A이며 본 plan의 Structure 섹션에 명시. ✅
-- 모든 게이트 재통과. **Phase 2(`/speckit-tasks`) 진입 가능**.
+- 모든 게이트 재통과. Phase 2(`/speckit-tasks`) 진입 가능.
+
+## Post-Implementation Constitution Re-Check (T020)
+
+구현 진행 후 갱신(Phase 1·2·3·5 완료 시점, Phase 4·6 진행 중):
+
+| 원칙 | 구현 결과 |
+|---|---|
+| **I. Testcontainers (NON-NEGOTIABLE)** | ✅ `IntegrationTest` 베이스가 MySQL 8.0.36 + Redis 7-alpine 컨테이너 자동 부팅. `@DynamicPropertySource`로 spring.datasource·spring.data.redis 동적 주입. `withReuse(true)` + label scoping. (실제 5종 통합 테스트 실행 검증은 Phase 4) |
+| **II. 외부 의존 어댑터 격리** | ✅ Testcontainers는 테스트 인프라 내부 어댑터로 격리. 도메인/서비스 코드 변경 0. |
+| **III. QueryDSL Projections** | N/A (DTO 변경 없음). |
+| **IV. Outbox 강제 (NON-NEGOTIABLE)** | N/A (메시지 발행 변경 없음). |
+| **V. 시크릿 로그 금지 (NON-NEGOTIABLE)** | ✅ `MaskingPatternConverter` 21 test 통과 + `JwtTokenProvider` 평문 2건 제거 + `JwtTokenProviderSecretLogTest` 2 test 통과 + `verifySecretLogScan` Gradle 태스크가 `check`에 hook. 다중 방어. |
+| **VI. 듀얼 AI 리뷰** | ✅ `.github/PULL_REQUEST_TEMPLATE.md`에 Constitution Check + Claude Code + Codex 리뷰 섹션 강제. |
+| **VII. 인수 기준 자동 테스트** | ✅ SC-001·SC-004·SC-005 모두 자동 테스트로 검증. SC-002·SC-003은 Phase 4 통합 테스트 smoke run에서, SC-006은 quickstart.md §2 가이드로 구조적 충족. |
+
+**Complexity Tracking**: 위반 없음.
+
+**구현 중 발견 사항**:
+- 기존 `IntegrationTest` 추상 베이스가 이미 존재했으므로 신규 `IntegrationTestSupport`를 만들지 않고 기존 클래스를 확장하여 단순화 (Structure 섹션 동기화 완료).
+- 통합 테스트 5종 이름이 모두 정확함을 빌드 출력에서 확인 (analyze F1 false positive로 철회).
+- JWT 메타데이터 대체 로그(`log.debug("jwt secret loaded ...")`) 추가는 본 PR에서 의도적으로 제외. `verifySecretLogScan` + 마스킹 컨버터 이중 방어로 충분하며, 메타데이터 자체가 마스킹 정규식에 부수 매칭될 위험이 있음. 필요 시 후속 PR.
+
+**결과**: 게이트 재통과. Phase 4·6 진입 가능.
