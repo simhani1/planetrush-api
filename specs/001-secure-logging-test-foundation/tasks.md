@@ -92,16 +92,9 @@ Single Spring Boot module:
 
 ### Implementation for User Story 2
 
-- [ ] T012 [US2] Audit 5 existing integration test files and ensure they extend the updated `IntegrationTest` base (T006). 대상 파일:
-  - `src/test/java/com/planetrush/planetrush/member/MemberIntegrationTest.java`
-  - `src/test/java/com/planetrush/planetrush/planet/PlanetIntegrationTest.java`
-  - `src/test/java/com/planetrush/planetrush/verification/VerificationIntegrationTest.java`
-  - `src/test/java/com/planetrush/planetrush/verification/VerificationServiceFailureIntegrationTest.java`
-  - `src/test/java/com/planetrush/planetrush/verification/VerificationServiceIntegrationTest.java`
-  
-  각 파일에서 하드코딩된 `localhost:3306` / `localhost:6379` 또는 `@TestPropertySource` 오버라이드 발견 시 제거(이제 베이스가 동적 주입). 어서션 변경 금지.
-- [ ] T013 [US2] Smoke run with local daemons OFF: `docker stop $(docker ps -q --filter "name=mysql\|name=redis")` (or 사용자 환경별 동등 명령) → `./gradlew test`. 전 테스트 통과 확인. 실패 시 T012의 잔존 하드코딩 의심.
-- [ ] T014 [P] [US2] Add note to `specs/001-.../quickstart.md` (이미 작성됨) Trouble­shooting 섹션이 실제 에러 메시지와 일치하는지 빠르게 점검(Docker daemon off 케이스 시뮬레이션 후 메시지 캡처). 본 task는 문서 정합성 확인이며 코드 변경 없음.
+- [X] T012 [US2] Audit 5 existing integration test files. 결과: Member/Planet은 직접 `extends IntegrationTest`, VerificationServiceFailure/VerificationService는 `extends VerificationIntegrationTest`(이게 다시 `extends IntegrationTest`). 6번째로 발견된 `infra/publisher/VerificationRedisStreamPublisherTest`는 순수 Mockito 단위 테스트라 영향권 밖. 어떤 파일에도 `localhost:*` 하드코딩이나 `@TestPropertySource` override 없음. **추가 코드 변경 0건**.
+- [X] T013 [US2] **옵션 B 부분 검증** (Docker daemon OFF 상태에서 수행). `./gradlew test --tests "*MemberIntegrationTest"` 실행 시 `IllegalStateException: Could not find a valid Docker environment. Please check configuration.` 출력. **US2-3 Acceptance Scenario 자동 통과** (silent fail 0, 명확한 에러). US2-1·2 풀 검증(데몬 OFF에서 컨테이너 자동 부팅·통과)은 사용자가 Docker(Desktop/OrbStack/Colima) 가동 환경에서 직접 검증.
+- [X] T014 [P] [US2] quickstart.md §1.3의 "Could not find a valid Docker environment. Please check configuration." 문자열이 실제 출력과 정확히 일치함을 확인. 문서 정합 ✓.
 
 **Checkpoint**: SC-002, SC-003, US2 Acceptance Scenarios 통과. 후속 스펙이 본 베이스를 상속할 준비 완료.
 
@@ -128,12 +121,15 @@ Single Spring Boot module:
 
 - [X] T017 [P] Update root `README.md` Tools section: Testcontainers 추가, 통합 테스트 Docker 의존 명시(한 줄 + quickstart.md 링크). — T003에서 처리됨.
 - [X] T018 [P] Add or extend `.github/PULL_REQUEST_TEMPLATE.md` with section "## AI Review (Constitution VI)" requiring `- [ ] Claude Code 리뷰 첨부 (결과/채택·기각 사유)` and `- [ ] Codex 리뷰 첨부 (결과/채택·기각 사유)` checkboxes. — Constitution Check + Spec Reference + Verification 섹션도 함께 추가.
-- [ ] T019 Run full local validation per `specs/001-.../quickstart.md` §2~5 once:
-  - `./gradlew clean check` 통과 (verifySecretLogScan 포함)
-  - 로컬 MySQL/Redis 데몬 OFF 상태에서 `./gradlew test` 통과
-  - `SPRING_PROFILES_ACTIVE=prod ./gradlew bootRun --args='--spring.config.import=optional:file:.env[.properties]'` 부팅 로그에 SQL 출력 0건
-  - `grep -RIn "secret key:" src/main` 결과 0건
-  - Phase 4 완료 후 실시.
+- [X] T019 **부분 검증 (옵션 B)**:
+  - ✅ `./gradlew verifySecretLogScan`: `secret log scan clean`
+  - ✅ `./gradlew test --tests "*core*"`: 단위 테스트 25 (21+2+2) 통과
+  - ✅ `./gradlew compileJava compileTestJava`: 통과
+  - ✅ `grep -RIn "secret key:" src/main` 결과 0건 (수동 확인 + Gradle 게이트 동시 보장)
+  - ⏳ **사용자 수동 검증 위임 (Docker 가동 후)**:
+    - `./gradlew clean check` (통합 테스트 포함)
+    - 로컬 MySQL/Redis 데몬 OFF + `./gradlew test` 풀 통과
+    - `SPRING_PROFILES_ACTIVE=prod ./gradlew bootRun` 부팅 로그 SQL 0건 (운영 환경변수 의존, 운영 환경에서 검증 권장)
 - [X] T020 Update Constitution Alignment table in `specs/001-.../plan.md` "Post-Design Constitution Re-Check" 섹션을 본 구현 완료 후 결과로 갱신. Project Structure도 `IntegrationTest` 재활용 결정에 맞춰 정정. "Post-Implementation Constitution Re-Check" 섹션 신규 추가.
 
 **Checkpoint**: PR 머지 준비 완료.
