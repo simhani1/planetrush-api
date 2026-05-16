@@ -68,13 +68,13 @@ Single Spring Boot module:
 
 ### Tests for User Story 1 (TDD — 작성 후 실패 확인 → 구현 → 통과)
 
-- [ ] T008 [P] [US1] Write `src/test/java/com/planetrush/planetrush/core/logging/MaskingPatternConverterTest.java` with parameterized cases: (a) 5 keywords × 4 형식(`key=value`, `key: value`, JSON-like `"key":"value"`, 멀티라인/스택트레이스 안 변수), (b) 마스킹 대상 아닌 일반 로그는 변형 0, (c) 키워드는 보존하고 값만 `***`로 치환. 테스트 실행 시 **모두 실패해야 함**(stub 구현이라).
+- [X] T008 [P] [US1] Write `src/test/java/com/planetrush/planetrush/core/logging/MaskingPatternConverterTest.java` with parameterized cases: (a) 5 keywords × 4 형식(`key=value`, `key: value`, JSON-like `"key":"value"`, 멀티라인/스택트레이스 안 변수), (b) 마스킹 대상 아닌 일반 로그는 변형 0, (c) 키워드는 보존하고 값만 `***`로 치환. 테스트 실행 시 **모두 실패해야 함**(stub 구현이라).
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Implement real masking logic in `src/main/java/com/planetrush/planetrush/core/logging/MaskingPatternConverter.java` using regex `(?i)(secret|token|password|jwt|credential)[^=:]*[=:]\s*\S+` per research R-001. T008의 모든 케이스가 통과해야 함.
-- [ ] T010 [P] [US1] Remove plaintext secret logs from `src/main/java/com/planetrush/planetrush/core/jwt/JwtTokenProvider.java` — specifically the `log.info("secret key: {}", SECRET_KEY)` line (and any sibling patterns). Replace with `log.debug("jwt secret loaded (length={}, fp={})", len, sha256First8Hex(SECRET_KEY))` per research R-004. Add private helper for fingerprint hash.
-- [ ] T011 [US1] Add `src/test/java/com/planetrush/planetrush/core/jwt/JwtTokenProviderSecretLogTest.java` that uses Logback `ListAppender<ILoggingEvent>` to capture output during normal token issuance, assert no plaintext secret substring appears. Covers SC-005 + Acceptance Scenario US1-2.
+- [X] T009 [US1] Implement real masking logic in `src/main/java/com/planetrush/planetrush/core/logging/MaskingPatternConverter.java` using regex `(?i)(\b(?:secret|token|password|jwt|credential)[^=:\n]{0,20}[=:]\s*)([^\s,;}'"\\]+)` per research R-001 (refined to avoid greedy value capture across separators). T008의 모든 케이스가 통과한다 (21/21).
+- [X] T010 [P] [US1] Remove plaintext secret logs from `src/main/java/com/planetrush/planetrush/core/jwt/JwtTokenProvider.java` — `log.info("secret key: {}", SECRET_KEY)` 2건 삭제(createAccessToken 라인 63, validateToken 라인 106). 메타데이터 대체 로그는 추가하지 않음(verifySecretLogScan + 마스킹 컨버터 이중 방어로 충분, 필요 시 별도 변경으로 추가). research R-004와 약간 다른 결정(스코프 최소화).
+- [X] T011 [US1] Add `src/test/java/com/planetrush/planetrush/core/jwt/JwtTokenProviderSecretLogTest.java` — Logback `ListAppender<ILoggingEvent>`로 `JwtTokenProvider` 로거 캡처 후 `createToken`/`validateToken` 호출, 어떤 이벤트에도 SECRET_KEY 평문 미포함 검증(2 tests 통과). SC-005 + US1-2 충족.
 
 **Checkpoint**: `./gradlew check` 통과 (T007 grep 게이트 포함). SC-001, SC-005, US1 Acceptance Scenarios 모두 자동 통과.
 
