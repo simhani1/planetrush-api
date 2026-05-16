@@ -1,0 +1,20 @@
+# Spec 001 US3 — 운영 프로필 오버라이드.
+# Constitution Additional Constraints "운영 안티패턴 즉시 차단" 충족.
+# application.yml 공통 기본값(dev 친화) 위에 prod 전용 오버라이드만 둔다.
+spring:
+  config:
+    activate:
+      on-profile: prod
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+    # NOTE: hibernate.ddl-auto=update → validate 전환은 Spec 5 (Flyway 도입)에서
+    # 일괄 처리한다. 본 스펙은 의도적으로 변경하지 않음.
+
+logging:
+  level:
+    org:
+      springframework:
+        web: INFO

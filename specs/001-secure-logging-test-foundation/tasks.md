@@ -115,12 +115,8 @@ Single Spring Boot module:
 
 ### Implementation for User Story 3
 
-- [ ] T015 [P] [US3] Create `src/main/resources/application-prod.yml` with overrides per research R-003: `spring.jpa.show-sql: false`, `spring.jpa.properties.hibernate.format_sql: false`, `logging.level.org.springframework.web: INFO`. **`ddl-auto`는 본 스펙에서 변경하지 않음** (Spec 5에서 Flyway와 함께 처리, plan에 명시됨) — application-prod.yml에도 포함하지 않거나, 명시적으로 `update`를 그대로 두되 TODO 주석으로 Spec 5 링크.
-- [ ] T016 [US3] Add `src/test/java/com/planetrush/planetrush/core/config/ProdProfileBootTest.java` with `@SpringBootTest(webEnvironment = NONE)` + `@ActiveProfiles("prod")` that asserts:
-  - `environment.getProperty("spring.jpa.show-sql")` == `"false"`
-  - `LoggerFactory.getLogger("org.springframework.web").isInfoEnabled()` && `!isDebugEnabled()`
-  
-  민감 환경변수(`JWT_SECRET_KEY` 등)는 dummy로 주입(`@TestPropertySource(properties = {...})`).
+- [X] T015 [P] [US3] Create `src/main/resources/application-prod.yml` with overrides per research R-003: `spring.jpa.show-sql: false`, `spring.jpa.properties.hibernate.format_sql: false`, `logging.level.org.springframework.web: INFO`. `spring.config.activate.on-profile: prod` 명시로 dev/test 회귀 방지. `ddl-auto`는 Spec 5에서 일괄 처리 (TODO 주석으로 링크).
+- [X] T016 [US3] Add `src/test/java/com/planetrush/planetrush/core/config/ProdProfileBootTest.java`. `@SpringBootTest` 풀 부팅 대신 `YamlPropertiesFactoryBean`으로 application-prod.yml 직접 로드 후 키 값 검증 — 외부 환경변수(JWT/Kakao/AWS) 의존을 본 PR 범위 밖으로 유지. 풀 부팅 통합 테스트가 후속 필요 시 Testcontainers 베이스에 prod 프로필 변형으로 추가 가능. 2 tests 통과 (overrides + on-profile scoping). SC-004 충족.
 
 **Checkpoint**: SC-004, US3 Acceptance Scenarios 통과.
 
