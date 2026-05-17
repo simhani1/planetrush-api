@@ -44,7 +44,10 @@
     <img src="https://img.shields.io/badge/-Swagger-%23Clojure?style=flat-square&logo=swagger&logoColor=white"/>
     <img src="https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white"/>
     <img src="https://img.shields.io/badge/git-%23F05033.svg?style=flat-square&logo=git&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Testcontainers-2C2255?style=flat-square&logo=docker&logoColor=white"/>
   </p>
+
+> 통합 테스트는 Docker 런타임(Docker Desktop / OrbStack / Colima 등)을 요구합니다. 자세한 셋업과 컨테이너 재사용 옵션은 [`specs/001-secure-logging-test-foundation/quickstart.md`](specs/001-secure-logging-test-foundation/quickstart.md) 참조.
 
 
 ### 아키텍처

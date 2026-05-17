@@ -60,7 +60,6 @@ public class JwtTokenProvider {
 	 * @return 새로운 accessToken
 	 */
 	private String createAccessToken(Long memberId) {
-		log.info("secret key: {}", SECRET_KEY);
 		StringBuilder sb = new StringBuilder();
 		sb.append("Bearer ");
 		sb.append(
@@ -103,7 +102,6 @@ public class JwtTokenProvider {
 	 * @throws ExpiredJwtException JWT 토큰이 만료되었을 때 발생
 	 */
 	public boolean validateToken(String accessToken) {
-		log.info("secret key: {}", SECRET_KEY);
 		if (!accessToken.startsWith("Bearer ")) {
 			return false;
 		}

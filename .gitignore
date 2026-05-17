@@ -230,5 +230,6 @@ gradle-app.setting
 .idea
 .build
 .env
+.claude/settings.local.json
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,intellij,java,gradle
