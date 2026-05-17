@@ -51,7 +51,15 @@ class MaskingPatternConverterTest {
 				// 대소문자 무시
 				Arguments.of("SECRET KEY: abc123", "SECRET KEY: ***"),
 				Arguments.of("Token=xyz", "Token=***"),
-				Arguments.of("Password : Secret123", "Password : ***")
+				Arguments.of("Password : Secret123", "Password : ***"),
+				// quoted 값 (Codex P1-1 회귀 방지 — 따옴표 보존 + 내부 값만 마스킹)
+				Arguments.of("token=\"abc123\"", "token=\"***\""),
+				Arguments.of("password: \"p@ss!\"", "password: \"***\""),
+				Arguments.of("credential='ABCDEF'", "credential='***'"),
+				// JSON-like (구조화 로그)
+				Arguments.of("\"token\":\"eyJabc.def\"", "\"token\":\"***\""),
+				Arguments.of("{\"jwt\":\"eyJhbGc\"}", "{\"jwt\":\"***\"}"),
+				Arguments.of("\"password\":\"p@ss\"", "\"password\":\"***\"")
 		);
 	}
 
@@ -83,6 +91,15 @@ class MaskingPatternConverterTest {
 	void shouldMaskMultipleKeywordsInSameLine() {
 		String input = "token=abc; secret=xyz; password=p1";
 		String expected = "token=***; secret=***; password=***";
+		ILoggingEvent event = newEvent(input);
+		assertThat(converter.convert(event)).isEqualTo(expected);
+	}
+
+	@Test
+	@DisplayName("quoted/unquoted 혼합 라인도 각각 적절히 마스킹된다 (Codex P1-1 회귀 방지)")
+	void shouldMaskMixedQuotingInSameLine() {
+		String input = "token=\"abc\"; password=plain; \"jwt\":\"eyJabc\"";
+		String expected = "token=\"***\"; password=***; \"jwt\":\"***\"";
 		ILoggingEvent event = newEvent(input);
 		assertThat(converter.convert(event)).isEqualTo(expected);
 	}
