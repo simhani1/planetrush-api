@@ -119,11 +119,18 @@ tasks.named('check') { dependsOn 'verifySecretLogScan' }
 
 ## R-006 · 새 의존성 라이선스/유지보수 점검
 
-| 의존성 | 라이선스 | 최신 안정 | 마지막 릴리스 | 비고 |
-|---|---|---|---|---|
-| `testcontainers-bom:1.20.4` | Apache 2.0 | 1.20.4 | 활발 (월 단위 릴리스) | 사실상 표준 |
-| `testcontainers-mysql` | Apache 2.0 | 1.20.4 | 활발 | 동일 |
-| `testcontainers-junit-jupiter` | Apache 2.0 | 1.20.4 | 활발 | JUnit 5 표준 통합 |
+| 의존성 | 라이선스 | 채택 버전 | 비고 |
+|---|---|---|---|
+| `testcontainers-bom` | Apache 2.0 | 2.0.5 | 사실상 표준. 메이저 2.x는 Docker Desktop 4.x의 socket redirect 응답을 정상 처리 |
+| `testcontainers-mysql` | Apache 2.0 | 2.0.5 (BOM 관리) | MySQL 8.x 헬퍼 |
+| `testcontainers-junit-jupiter` | Apache 2.0 | 2.0.5 (BOM 관리) | JUnit 5 표준 통합 |
+| `commons-lang3` | Apache 2.0 | 3.18.0 | Testcontainers 2.x explicit 의존 |
+
+**버전 결정 회고 (구현 중 발견)**: 초기 1.20.4로 시작했으나 통합 테스트 실행 시
+Docker Desktop 4.x가 빈 JSON에 `Labels: ["com.docker.desktop.address=..."]`만 담은
+redirect 응답을 보내고 1.20.x `DockerClientProviderStrategy`가 이를 처리하지 못해
+`IllegalStateException` 발생. 2.0.5로 업그레이드 후 정상 동작 확인. 모듈 이름 prefix가
+`testcontainers-`로 변경되어 함께 갱신, commons-lang3 explicit 추가.
 
 라이선스·유지보수 측면 위험 없음. 컨스티튜션 "라이브러리 도입 규칙" 충족.
 

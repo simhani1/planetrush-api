@@ -26,7 +26,7 @@ repositories {
 dependencyManagement {
     imports {
         /* Testcontainers BOM (Spec 001 — Constitution 원칙 I 충족 토대, Apache 2.0, 활발한 유지보수) */
-        mavenBom 'org.testcontainers:testcontainers-bom:1.20.4'
+        mavenBom 'org.testcontainers:testcontainers-bom:2.0.5'
     }
 }
 
@@ -72,8 +72,9 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     /* Testcontainers (Spec 001 — 통합 테스트 자립화, 로컬 데몬 의존 제거) */
-    testImplementation 'org.testcontainers:junit-jupiter'
-    testImplementation 'org.testcontainers:mysql'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testImplementation 'org.testcontainers:testcontainers-mysql'
+    testImplementation 'org.apache.commons:commons-lang3:3.18.0'
 }
 
 /* Spec 001 SC-005 — 시크릿 키워드 평문 로그 차단 게이트.
@@ -103,4 +104,3 @@ tasks.named('test') {
 clean {
     delete file('src/main/generated')
 }
-

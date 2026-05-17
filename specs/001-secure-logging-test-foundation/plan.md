@@ -21,9 +21,10 @@ Brownfield 인프라 도입. 두 가지를 단일 PR로 머지한다:
 
 | 의존성 | 도입 사유 | 거절된 대안 |
 |---|---|---|
-| `org.testcontainers:testcontainers-bom:1.20.4` | 버전 통일성 + 컨스티튜션 원칙 I 충족 토대 | 개별 모듈 직접 버전 지정 — 향후 버전 드리프트 위험 |
-| `org.testcontainers:junit-jupiter` | `@Testcontainers` 어노테이션 + JUnit 5 라이프사이클 통합 | 수동 컨테이너 시작/종료 — 보일러플레이트 폭증 |
-| `org.testcontainers:mysql` | MySQL 8.x 컨테이너 헬퍼 | Embedded MariaDB / H2 — 운영 동작 차이 + 컨스티튜션 원칙 I 위반 |
+| `org.testcontainers:testcontainers-bom:2.0.5` | 버전 통일성 + 컨스티튜션 원칙 I 충족 토대. Docker Desktop 4.x의 socket redirect 응답을 정상 처리하는 메이저 라인 | 1.20.x — Docker Desktop 신버전에서 `DockerClientProviderStrategy` 실패 발생 (구현 중 검증됨) |
+| `org.testcontainers:testcontainers-junit-jupiter` | `@Testcontainers` 어노테이션 + JUnit 5 라이프사이클 통합. 2.x에서 모듈 prefix가 `testcontainers-`로 변경 | 수동 컨테이너 시작/종료 — 보일러플레이트 폭증 |
+| `org.testcontainers:testcontainers-mysql` | MySQL 8.x 컨테이너 헬퍼 | Embedded MariaDB / H2 — 운영 동작 차이 + 컨스티튜션 원칙 I 위반 |
+| `org.apache.commons:commons-lang3:3.18.0` | Testcontainers 2.x가 명시적 의존으로 요구 (1.x에서는 transitive). Apache 2.0 | 미도입 — 빌드 실패 |
 
 Redis는 별도 모듈 추가 없이 `GenericContainer<>` + `redis:7-alpine` 이미지로 어댑터 한 곳에 격리(JedisConnectionFactory 동적 주입). Redis 모듈은 컨스티튜션 원칙 II("외부 의존은 어댑터로 격리")에 따라 통합 테스트 베이스 내부에 캡슐화.
 

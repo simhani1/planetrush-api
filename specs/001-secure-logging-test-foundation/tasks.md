@@ -37,7 +37,7 @@ Single Spring Boot module:
 
 **Purpose**: 빌드 의존성과 디렉토리 준비.
 
-- [X] T001 Add Testcontainers BOM + `junit-jupiter` + `mysql` modules to `build.gradle` (testImplementation), with comment citing constitution 원칙 I and research R-006 (라이선스/유지보수 점검 결과)
+- [X] T001 Add Testcontainers BOM 2.0.5 + `testcontainers-junit-jupiter` + `testcontainers-mysql` + `commons-lang3:3.18.0` to `build.gradle` (testImplementation). 초기 1.20.4 → Docker Desktop 4.x socket redirect 호환 이슈로 2.0.5 채택 (research R-006 회고 참조).
 - [X] T002 [P] Create new package directory `src/main/java/com/planetrush/planetrush/core/logging/` with empty `package-info.java`
 - [X] T003 [P] Add Docker prerequisite note to `README.md` (one line under existing Tools section): "통합 테스트는 Docker 런타임(Docker Desktop / OrbStack / Colima 등)을 요구합니다. 자세한 셋업은 `specs/001-.../quickstart.md` 참조."
 
