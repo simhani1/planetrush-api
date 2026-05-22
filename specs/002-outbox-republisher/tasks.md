@@ -112,13 +112,13 @@ description: "Task list for Spec 002 — Outbox Republisher Worker (simplified)"
 
 **Purpose**: 잔여 인수 기준 + 머지 준비.
 
-- [ ] T011 [P] Add `src/test/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisherProfileTest.java` — SC-004: `test` 프로필 부팅 시 `OutboxRepublisher` 빈이 컨텍스트에 부재함 검증(`assertThatThrownBy(() -> context.getBean(OutboxRepublisher.class))` 또는 `ObjectProvider` 부재 확인).
-- [ ] T012 [US1] Add 발행 지연 측정 to `OutboxRepublisherIntegrationTest.java` — SC-005: `PENDING` 저장 시각 ~ `PUBLISHED` 전환 시각 차이가 폴링 주기 + 1초 이내임을 측정(테스트에서는 폴러 직접 호출이므로 "주기 내 1회 호출로 발행됨"을 확인하는 형태로 검증).
-- [ ] T013 Run full local validation:
+- [X] T011 [P] Add `src/test/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisherProfileTest.java` — SC-004: `test` 프로필 부팅 시 `OutboxRepublisher` 빈이 컨텍스트에 부재함 검증(`assertThatThrownBy(() -> context.getBean(OutboxRepublisher.class))` 또는 `ObjectProvider` 부재 확인).
+- [X] T012 [US1] Add 발행 지연 측정 to `OutboxRepublisherIntegrationTest.java` — SC-005: `PENDING` 저장 시각 ~ `PUBLISHED` 전환 시각 차이가 폴링 주기 + 1초 이내임을 측정(테스트에서는 폴러 직접 호출이므로 "주기 내 1회 호출로 발행됨"을 확인하는 형태로 검증).
+- [X] T013 Run full local validation:
   - `./gradlew test --tests "*OutboxRepublisher*"` 전 통과
   - `./gradlew verifySecretLogScan` clean (Spec 001 게이트)
   - `./gradlew check` 통과
-- [ ] T014 Update `specs/002-outbox-republisher/plan.md` "Post-Design Constitution Re-Check" 섹션을 구현 완료 결과로 갱신 + 발견 사항 기록.
+- [X] T014 Update `specs/002-outbox-republisher/plan.md` "Post-Design Constitution Re-Check" 섹션을 구현 완료 결과로 갱신 + 발견 사항 기록.
 
 **Checkpoint**: 전 SC 통과. PR 머지 준비 완료.
 

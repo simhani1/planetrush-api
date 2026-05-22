@@ -123,4 +123,30 @@ Phase 0·1 산출물(research.md, quickstart.md) 작성 후 갱신:
 
 - 신규 위반 없음. `data-model.md`/`contracts/` 생략은 스키마·외부 계약 변경 0에 따른 의도된 N/A이며 본 plan Structure에 명시. ✅
 - research.md의 락 쿼리 결정(native `FOR UPDATE SKIP LOCKED`)이 원칙 III와 무관함 재확인 — 엔티티 조회이지 DTO 매핑 아님. ✅
-- 전 게이트 재통과. **Phase 2(`/speckit-tasks`) 진입 가능.**
+- 전 게이트 재통과. Phase 2(`/speckit-tasks`) 진입 가능.
+
+## Post-Implementation Constitution Re-Check (T014)
+
+구현 완료(T001~T013) 후 갱신:
+
+| 원칙 | 구현 결과 |
+|---|---|
+| **I. Testcontainers (NON-NEGOTIABLE)** | ✅ `OutboxRepublisherIntegrationTest`·`ConcurrencyTest`·`ProfileTest`가 `IntegrationTest`(MySQL/Redis Testcontainers) 상속. SKIP LOCKED 동시성은 실제 MySQL에서만 검증 가능 — Testcontainers 당위성 확인. |
+| **II. 외부 의존 어댑터 격리** | ✅ 폴러는 `VerificationMessagePublisher` 인터페이스에만 의존, Redis 직접 호출 0. 도메인 코드 변경 0. |
+| **III. QueryDSL Projections** | ✅ N/A — 폴링은 `OutboxEvent` 엔티티 조회(DTO 매핑 아님). |
+| **IV. Outbox 강제 (NON-NEGOTIABLE)** | ✅ 본 스펙이 Outbox 신뢰성을 강화. 발행은 전부 OutboxEvent 경유. |
+| **V. 시크릿 로그 금지 (NON-NEGOTIABLE)** | ✅ 폴러 로그는 outbox id·건수만 출력(payload·시크릿 미출력). `verifySecretLogScan` clean 확인. |
+| **VI. 듀얼 AI 리뷰** | ⏳ PR 단계에서 Claude + Codex 리뷰 첨부 예정. |
+| **VII. 인수 기준 자동 테스트** | ✅ SC-001~005 전부 자동 테스트로 검증 (16 tests). tasks.md에 SC↔Task 매핑. |
+
+**Complexity Tracking**: 위반 없음.
+
+**구현 중 발견·결정 사항**:
+
+1. **`OutboxEvent.status` ORDINAL 매핑** — `@Enumerated` 미지정이라 DB에 정수로 저장됨. native 폴링 쿼리는 `status = 'PENDING'`이 아니라 `OutboxStatus.PENDING.ordinal()`(정수)로 비교하도록 구현. research R-001의 예시 SQL을 ordinal 파라미터 방식으로 정정.
+2. **폴러 2클래스 분리** — `@Scheduled`+`@Transactional`을 한 클래스에 두면 `test` 프로필(`enabled=false`)에서 빈이 통째 사라져 통합 테스트가 호출 불가. `new`로 만들면 `@Transactional` 프록시 미적용으로 SKIP LOCKED 락 검증 불가. → `OutboxRepublisher`(항상 빈, 로직) + `OutboxRepublisherScheduler`(`@ConditionalOnProperty`, 트리거)로 분리. plan Structure 반영 완료.
+3. **컷오프 테스트 timezone 버그** — `java.sql.Timestamp`는 JDBC 전송 시 JVM TZ(KST)로 해석되어 `@CreationTimestamp`의 UTC 저장과 9시간 어긋남. MySQL `UTC_TIMESTAMP()` 기반 native update로 수정.
+4. **analyze U1 해소** — SC-005를 "평균 발행 지연 측정"에서 "폴러 사이클 1회의 배치 완전성"으로 재정의(`test` 프로필은 폴러 자동 실행이 비활성이라 주기 기반 측정 불가). spec.md SC-005 갱신.
+5. **analyze M1 해소** — `@EnableConfigurationProperties(OutboxRepublisherProperties.class)`를 `OutboxRepublisher`에 부착해 properties 등록을 명확히 고정.
+
+**결과**: 게이트 재통과. 위반 0. PR 머지 준비 단계로 진입.

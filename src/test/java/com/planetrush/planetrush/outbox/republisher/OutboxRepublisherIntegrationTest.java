@@ -113,6 +113,26 @@ class OutboxRepublisherIntegrationTest extends IntegrationTest {
 				.isEqualTo(OutboxStatus.PENDING);
 	}
 
+	@Test
+	@DisplayName("SC-005: 폴러 사이클 1회가 조회된 PENDING 배치를 모두 그 사이클 내에 발행한다")
+	void singleCyclePublishesEntireBatch() {
+		// given: batch-size(기본 100) 이내의 PENDING 10건
+		for (int i = 0; i < 10; i++) {
+			outboxRepository.save(OutboxEvent.pending(
+					UUID.randomUUID().toString(), EventType.VERIFICATION_REQUEST, payloadJson()));
+		}
+		stubPublishSuccess();
+
+		// when: 폴러 사이클 1회
+		outboxRepublisher.republishPending();
+
+		// then: 조회된 배치 전량이 같은 사이클 안에서 PUBLISHED
+		// (운영 환경의 실제 발행 지연은 폴링 주기에 의해 결정됨 — spec.md Assumptions)
+		assertThat(outboxRepository.findAll())
+				.hasSize(10)
+				.allMatch(event -> event.getStatus() == OutboxStatus.PUBLISHED);
+	}
+
 	/**
 	 * mock 발행기가 실제 `VerificationRedisStreamPublisher`의 계약을 흉내 낸다:
 	 * 발행이 성공하면 해당 OutboxEvent를 published()로 전환한다.
