@@ -68,9 +68,9 @@ description: "Task list for Spec 002 — Outbox Republisher Worker (simplified)"
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Create `src/main/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisher.java` 골격 — `@Component`, `@ConditionalOnProperty(name="outbox.republisher.enabled", havingValue="true")`, 생성자 주입(`OutboxRepository`, `VerificationMessagePublisher`, `ObjectMapper`, `OutboxRepublisherProperties`). `@EnableConfigurationProperties(OutboxRepublisherProperties.class)`는 본 클래스 또는 별도 config에 부착.
-- [ ] T007 [US1] Implement `republishPending()` in `OutboxRepublisher.java` — `@Scheduled(fixedDelayString="${outbox.republisher.polling-interval-ms:5000}")` + `@Transactional`. 로직: cutoff 계산(`now - cutoffMinutes`) → `findRepublishableForUpdateSkipLocked` 조회 → 각 건 `VerificationOutboxPayload` 역직렬화 → `MessageCommand` 변환 → `messagePublisher.publish()` 호출. `publish()` 성공 시 내부에서 `published()` 전환됨(기존 동작 재사용). research R-002 트랜잭션 경계.
-- [ ] T008 [US1] Add `src/test/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisherIntegrationTest.java` — `extends IntegrationTest`. 카오스 시나리오(SC-001): `PENDING` OutboxEvent 저장 → `republishPending()` 직접 호출 → `status == PUBLISHED` 검증. 발행 1차 실패 후 재시도 케이스 포함(Mock publisher 또는 Redis 일시 장애 시뮬레이션).
+- [X] T006 [US1] Create `src/main/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisher.java` 골격 — `@Component`, `@ConditionalOnProperty(name="outbox.republisher.enabled", havingValue="true")`, 생성자 주입(`OutboxRepository`, `VerificationMessagePublisher`, `ObjectMapper`, `OutboxRepublisherProperties`). `@EnableConfigurationProperties(OutboxRepublisherProperties.class)`는 본 클래스 또는 별도 config에 부착.
+- [X] T007 [US1] Implement `republishPending()` in `OutboxRepublisher.java` — `@Scheduled(fixedDelayString="${outbox.republisher.polling-interval-ms:5000}")` + `@Transactional`. 로직: cutoff 계산(`now - cutoffMinutes`) → `findRepublishableForUpdateSkipLocked` 조회 → 각 건 `VerificationOutboxPayload` 역직렬화 → `MessageCommand` 변환 → `messagePublisher.publish()` 호출. `publish()` 성공 시 내부에서 `published()` 전환됨(기존 동작 재사용). research R-002 트랜잭션 경계.
+- [X] T008 [US1] Add `src/test/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisherIntegrationTest.java` — `extends IntegrationTest`. 카오스 시나리오(SC-001): `PENDING` OutboxEvent 저장 → `republishPending()` 직접 호출 → `status == PUBLISHED` 검증. 발행 1차 실패 후 재시도 케이스 포함(Mock publisher 또는 Redis 일시 장애 시뮬레이션).
 
 **Checkpoint**: SC-001 통과. 폴러가 누락분을 재발행. US1 MVP 완성 — 단독으로 At-Least-Once 핵심 가치 제공.
 
@@ -102,7 +102,7 @@ description: "Task list for Spec 002 — Outbox Republisher Worker (simplified)"
 
 > 컷오프 제외 메커니즘(`created_at > :cutoff`)은 T004 쿼리 + T001 properties에 이미 포함. 본 Phase는 그 동작을 검증한다.
 
-- [ ] T010 [US3] Add 컷오프 검증 테스트 to `src/test/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisherIntegrationTest.java` — SC-003: `createdAt`을 컷오프보다 오래되게 설정한 `PENDING` 1건 + 컷오프 이내 `PENDING` 1건 저장 → `republishPending()` 호출 → 이내 건만 `PUBLISHED`, 오래된 건은 `PENDING` 잔존 검증. `createdAt`은 `@CreationTimestamp`라 테스트에서 native update로 과거 시각 주입.
+- [X] T010 [US3] Add 컷오프 검증 테스트 to `src/test/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisherIntegrationTest.java` — SC-003: `createdAt`을 컷오프보다 오래되게 설정한 `PENDING` 1건 + 컷오프 이내 `PENDING` 1건 저장 → `republishPending()` 호출 → 이내 건만 `PUBLISHED`, 오래된 건은 `PENDING` 잔존 검증. `createdAt`은 `@CreationTimestamp`라 테스트에서 native update로 과거 시각 주입.
 
 **Checkpoint**: SC-003 통과. poison message가 폴러 사이클을 영구 점유하지 않음.
 
