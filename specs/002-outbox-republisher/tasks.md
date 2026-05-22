@@ -39,9 +39,9 @@ description: "Task list for Spec 002 — Outbox Republisher Worker (simplified)"
 
 **Purpose**: 설정 외부화 + 스케줄러 종료 정책.
 
-- [ ] T001 [P] Create `src/main/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisherProperties.java` — `@ConfigurationProperties(prefix = "outbox.republisher")` record. 필드: `enabled`(boolean, default true), `pollingIntervalMs`(long, 5000), `cutoffMinutes`(long, 5), `batchSize`(int, 100). `@Validated` + 양수 제약.
-- [ ] T002 [P] Add `outbox.republisher.*` 기본값 to `src/main/resources/application.yml` (`enabled: true`, `polling-interval-ms: 5000`, `cutoff-minutes: 5`, `batch-size: 100`) and override `outbox.republisher.enabled: false` in `src/main/resources/application-test.yml`.
-- [ ] T003 [P] Add `spring.task.scheduling.shutdown.await-termination: true` + `await-termination-period: 20s` to `src/main/resources/application.yml` (research R-004, graceful shutdown).
+- [X] T001 [P] Create `src/main/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisherProperties.java` — `@ConfigurationProperties(prefix = "outbox.republisher")` record. 필드: `enabled`(boolean, default true), `pollingIntervalMs`(long, 5000), `cutoffMinutes`(long, 5), `batchSize`(int, 100). `@Validated` + 양수 제약.
+- [X] T002 [P] Add `outbox.republisher.*` 기본값 to `src/main/resources/application.yml` (`enabled: true`, `polling-interval-ms: 5000`, `cutoff-minutes: 5`, `batch-size: 100`) and override `outbox.republisher.enabled: false` in `src/main/resources/application-test.yml`.
+- [X] T003 [P] Add `spring.task.scheduling.shutdown.await-termination: true` + `await-termination-period: 20s` to `src/main/resources/application.yml` (research R-004, graceful shutdown).
 
 **Checkpoint**: 설정 바인딩 가능. `@ConfigurationProperties` 스캔 등록(`@ConfigurationPropertiesScan` 또는 `@EnableConfigurationProperties`)은 T006에서 폴러와 함께 처리.
 
@@ -53,8 +53,8 @@ description: "Task list for Spec 002 — Outbox Republisher Worker (simplified)"
 
 **⚠️ CRITICAL**: 이 Phase가 끝나야 US1/US2/US3 진입 가능.
 
-- [ ] T004 Add SKIP LOCKED 폴링 쿼리 to `src/main/java/com/planetrush/planetrush/outbox/repository/OutboxRepository.java` — native query 메서드 `findRepublishableForUpdateSkipLocked(Instant cutoff, int batchSize)`: `SELECT * FROM outbox_event WHERE status='PENDING' AND created_at > :cutoff ORDER BY created_at LIMIT :batchSize FOR UPDATE SKIP LOCKED` (research R-001).
-- [ ] T005 [P] Create `src/main/java/com/planetrush/planetrush/outbox/republisher/VerificationOutboxPayload.java` — `OutboxEvent.payload` JSON 역직렬화용 record(`standardImgUrl`, `verificationImgUrl`, `memberId`, `planetId`) + `OutboxEvent` → `MessageCommand` 변환 로직(매핑: eventId=id, standardImg=standardImgUrl, targetImg=verificationImgUrl). research R-003.
+- [X] T004 Add SKIP LOCKED 폴링 쿼리 to `src/main/java/com/planetrush/planetrush/outbox/repository/OutboxRepository.java` — native query 메서드 `findRepublishableForUpdateSkipLocked(Instant cutoff, int batchSize)`: `SELECT * FROM outbox_event WHERE status='PENDING' AND created_at > :cutoff ORDER BY created_at LIMIT :batchSize FOR UPDATE SKIP LOCKED` (research R-001).
+- [X] T005 [P] Create `src/main/java/com/planetrush/planetrush/outbox/republisher/VerificationOutboxPayload.java` — `OutboxEvent.payload` JSON 역직렬화용 record(`standardImgUrl`, `verificationImgUrl`, `memberId`, `planetId`) + `OutboxEvent` → `MessageCommand` 변환 로직(매핑: eventId=id, standardImg=standardImgUrl, targetImg=verificationImgUrl). research R-003.
 
 **Checkpoint**: 폴링 쿼리 + payload 변환 준비 완료. 폴러 컴포넌트 작성 가능.
 
