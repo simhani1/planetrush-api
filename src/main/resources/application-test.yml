@@ -82,3 +82,7 @@ verification:
     type: redis-stream  # http -> RestClient를 사용한 api 호출
   redis:
     stream-key: verification:stream
+
+outbox:
+  republisher:
+    enabled: false  # Spec 002 FR-006 — 통합 테스트는 폴러를 직접 호출해 결정론적으로 검증

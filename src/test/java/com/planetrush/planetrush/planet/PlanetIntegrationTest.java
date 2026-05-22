@@ -111,12 +111,13 @@ public class PlanetIntegrationTest extends IntegrationTest {
 		};
 
 		// WHEN
-		ExecutorService executor = Executors.newFixedThreadPool(2);
-		executor.submit(registerResidentTask);
-		executor.submit(deleteResidentTask);
+		try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+			executor.submit(registerResidentTask);
+			executor.submit(deleteResidentTask);
 
-		startLatch.countDown();
-		doneLatch.await();
+			startLatch.countDown();
+			doneLatch.await();
+		}
 
 		// THEN
 		planet = planetRepository.findById(planet.getId()).get();
@@ -188,27 +189,28 @@ public class PlanetIntegrationTest extends IntegrationTest {
 
 		// WHEN
 		int loop = 10;
-		ExecutorService executor = Executors.newFixedThreadPool(loop);
-		CountDownLatch startLatch = new CountDownLatch(1);
-		Callable<Void> task = () -> {
-			startLatch.await();
-			planetService.registerResident(registerDto);
-			return null;
-		};
-
-		List<Future<Void>> futures = IntStream.range(0, loop)
-			.mapToObj(i -> executor.submit(task))
-			.toList();
-		startLatch.countDown();
-
 		int successCnt = 0;
 		int failedCnt = 0;
-		for (Future<Void> future : futures) {
-			try {
-				future.get();
-				successCnt++;
-			} catch (Exception e) {
-				failedCnt++;
+		try (ExecutorService executor = Executors.newFixedThreadPool(loop)) {
+			CountDownLatch startLatch = new CountDownLatch(1);
+			Callable<Void> task = () -> {
+				startLatch.await();
+				planetService.registerResident(registerDto);
+				return null;
+			};
+
+			List<Future<Void>> futures = IntStream.range(0, loop)
+				.mapToObj(i -> executor.submit(task))
+				.toList();
+			startLatch.countDown();
+
+			for (Future<Void> future : futures) {
+				try {
+					future.get();
+					successCnt++;
+				} catch (Exception e) {
+					failedCnt++;
+				}
 			}
 		}
 
@@ -227,27 +229,28 @@ public class PlanetIntegrationTest extends IntegrationTest {
 
 		// WHEN
 		int loop = 10;
-		ExecutorService executor = Executors.newFixedThreadPool(loop);
-		CountDownLatch startLatch = new CountDownLatch(1);
-		Callable<Void> task = () -> {
-			startLatch.await();
-			planetService.deleteResident(deleteDto);
-			return null;
-		};
-
-		List<Future<Void>> futures = IntStream.range(0, loop)
-			.mapToObj(i -> executor.submit(task))
-			.toList();
-		startLatch.countDown();
-
 		int successCnt = 0;
 		int failedCnt = 0;
-		for (Future<Void> future : futures) {
-			try {
-				future.get();
-				successCnt++;
-			} catch (Exception e) {
-				failedCnt++;
+		try (ExecutorService executor = Executors.newFixedThreadPool(loop)) {
+			CountDownLatch startLatch = new CountDownLatch(1);
+			Callable<Void> task = () -> {
+				startLatch.await();
+				planetService.deleteResident(deleteDto);
+				return null;
+			};
+
+			List<Future<Void>> futures = IntStream.range(0, loop)
+				.mapToObj(i -> executor.submit(task))
+				.toList();
+			startLatch.countDown();
+
+			for (Future<Void> future : futures) {
+				try {
+					future.get();
+					successCnt++;
+				} catch (Exception e) {
+					failedCnt++;
+				}
 			}
 		}
 
