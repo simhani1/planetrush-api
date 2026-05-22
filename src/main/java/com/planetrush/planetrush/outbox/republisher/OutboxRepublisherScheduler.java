@@ -20,7 +20,7 @@ public class OutboxRepublisherScheduler {
 
 	private final OutboxRepublisher outboxRepublisher;
 
-	@Scheduled(fixedDelayString = "${outbox.republisher.polling-interval-ms:5000}")
+	@Scheduled(fixedDelayString = "${outbox.republisher.polling-interval-ms:60000}")
 	public void schedule() {
 		outboxRepublisher.republishPending();
 	}

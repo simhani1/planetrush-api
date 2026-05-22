@@ -17,7 +17,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 @ConfigurationProperties(prefix = "outbox.republisher")
 public record OutboxRepublisherProperties(
 		@DefaultValue("true") boolean enabled,
-		@DefaultValue("5000") long pollingIntervalMs,
+		@DefaultValue("60000") long pollingIntervalMs,
 		@DefaultValue("5") long cutoffMinutes,
 		@DefaultValue("100") int batchSize
 ) {

@@ -134,11 +134,13 @@ spring:
 | 키 | 타입 | 기본값 | 의미 |
 |---|---|---|---|
 | `enabled` | boolean | `true` | 폴러 활성 여부 |
-| `polling-interval-ms` | long | `5000` | 폴링 주기(밀리초) |
+| `polling-interval-ms` | long | `60000` | 폴링 주기(밀리초). 컷오프 ÷ 목표 재시도 횟수에서 역산된 종속값 — 5분 컷오프 ÷ 4~5회 ≈ 1분 |
 | `cutoff-minutes` | long | `5` | `createdAt` 컷오프(분) — 초과 PENDING은 폴링 제외 |
 | `batch-size` | int | `100` | 사이클당 처리 상한 |
 
-`@Scheduled(fixedDelayString = "${outbox.republisher.polling-interval-ms:5000}")`로 주기를 주입한다.
+`@Scheduled(fixedDelayString = "${outbox.republisher.polling-interval-ms:60000}")`로 주기를 주입한다.
+
+**폴링 주기 설계 원칙**: 폴링 주기는 독립 변수가 아니라 **컷오프에 종속된 파생값**이다. 컷오프(비즈니스·운영 근거로 결정되는 주 기준)가 먼저 정해지고, "일시 장애 복구에 필요한 재시도 기회 횟수"를 정한 뒤 `폴링 주기 = 컷오프 ÷ 재시도 횟수`로 역산한다. 폴링 주기가 컷오프와 같거나 크면 경계에서 재시도 기회가 0~1회로 붕괴하므로, 폴링 ≪ 컷오프여야 한다. 기본값은 5분 컷오프 ÷ 약 5회 = 1분. 컷오프가 바뀌면 폴링도 비례해 따라가야 한다.
 
 **Rationale**:
 
