@@ -7,8 +7,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -18,27 +16,33 @@ import org.testcontainers.utility.DockerImageName;
  * MySQL/Redis 컨테이너를 자동 부팅하고 Spring DataSource·Redis 설정을 동적으로
  * 주입한다. 로컬에 데몬이 없어도 {@code ./gradlew test}가 통과해야 한다.
  *
- * <p>컨테이너 재사용은 {@code ~/.testcontainers.properties}에
- * {@code testcontainers.reuse.enable=true}로 활성화한다(quickstart.md §1.2 참조).
+ * <p><b>싱글톤 컨테이너 패턴</b> — {@code @Testcontainers}/{@code @Container}
+ * 라이프사이클을 쓰지 않고 static 초기화 블록에서 컨테이너를 한 번만 시작한다.
+ * 이유: {@code @Container}는 테스트 클래스 종료 시 컨테이너를 stop하는데,
+ * Spring TestContext는 컨텍스트를 캐시하므로 — 다음 클래스가 캐시된 컨텍스트를
+ * 재사용하면 그 HikariCP 풀이 이미 stop된 컨테이너를 가리켜
+ * "No operations allowed after connection closed" 오류가 난다. static 블록으로
+ * 시작한 컨테이너는 JVM 생존 내내 단일 인스턴스로 유지되어 이 문제가 없다.
+ * (JVM 종료 시 Testcontainers Ryuk가 정리한다.)
  */
-@Testcontainers
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public abstract class IntegrationTest {
 
-	@Container
 	static final MySQLContainer<?> MYSQL = new MySQLContainer<>(DockerImageName.parse("mysql:8.0.36"))
 			.withDatabaseName("planetrush")
 			.withUsername("test")
 			.withPassword("test")
-			.withReuse(true)
-			.withLabel("project", "planetrush-api");
+			.withReuse(true);
 
-	@Container
 	static final GenericContainer<?> REDIS = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
 			.withExposedPorts(6379)
-			.withReuse(true)
-			.withLabel("project", "planetrush-api");
+			.withReuse(true);
+
+	static {
+		MYSQL.start();
+		REDIS.start();
+	}
 
 	@DynamicPropertySource
 	static void registerContainerProperties(DynamicPropertyRegistry registry) {
