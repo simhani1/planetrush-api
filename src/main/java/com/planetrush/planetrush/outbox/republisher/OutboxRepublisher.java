@@ -15,6 +15,7 @@ import com.planetrush.planetrush.outbox.repository.OutboxRepository;
 import com.planetrush.planetrush.verification.event.publisher.VerificationMessagePublisher;
 import com.planetrush.planetrush.verification.service.dto.MessageCommand;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 @EnableConfigurationProperties(OutboxRepublisherProperties.class)
 public class OutboxRepublisher {
 
@@ -39,17 +41,6 @@ public class OutboxRepublisher {
 	private final VerificationMessagePublisher messagePublisher;
 	private final ObjectMapper objectMapper;
 	private final OutboxRepublisherProperties properties;
-
-	public OutboxRepublisher(
-			OutboxRepository outboxRepository,
-			VerificationMessagePublisher messagePublisher,
-			ObjectMapper objectMapper,
-			OutboxRepublisherProperties properties) {
-		this.outboxRepository = outboxRepository;
-		this.messagePublisher = messagePublisher;
-		this.objectMapper = objectMapper;
-		this.properties = properties;
-	}
 
 	/**
 	 * 폴러 사이클 1회. 컷오프 이내의 PENDING outbox를 SKIP LOCKED로 조회해 재발행한다.

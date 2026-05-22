@@ -4,6 +4,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * {@link OutboxRepublisher#republishPending()}를 주기적으로 호출하는 스케줄 트리거.
  *
@@ -12,14 +14,11 @@ import org.springframework.stereotype.Component;
  * 폴링 주기는 `outbox.republisher.polling-interval-ms` 설정값을 따른다.
  */
 @Component
+@RequiredArgsConstructor
 @ConditionalOnProperty(name = "outbox.republisher.enabled", havingValue = "true")
 public class OutboxRepublisherScheduler {
 
 	private final OutboxRepublisher outboxRepublisher;
-
-	public OutboxRepublisherScheduler(OutboxRepublisher outboxRepublisher) {
-		this.outboxRepublisher = outboxRepublisher;
-	}
 
 	@Scheduled(fixedDelayString = "${outbox.republisher.polling-interval-ms:5000}")
 	public void schedule() {
