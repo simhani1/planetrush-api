@@ -86,7 +86,7 @@ description: "Task list for Spec 002 — Outbox Republisher Worker (simplified)"
 
 > 동시성 보장 메커니즘(`FOR UPDATE SKIP LOCKED`)은 T004에서 이미 구현됨. 본 Phase는 그 동작을 검증한다.
 
-- [ ] T009 [US2] Add `src/test/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisherConcurrencyTest.java` — `extends IntegrationTest`. SC-002: `PENDING` OutboxEvent 100건 저장 → 폴러 사이클을 스레드 2개로 동시 실행(`ExecutorService` 또는 병렬 호출) → 각 outbox의 발행 횟수 정확히 1, `PUBLISHED` 카운트 100 검증. `@RepeatedTest(10)`으로 안정성 확인.
+- [X] T009 [US2] Add `src/test/java/com/planetrush/planetrush/outbox/republisher/OutboxRepublisherConcurrencyTest.java` — `extends IntegrationTest`. SC-002: `PENDING` OutboxEvent 100건 저장 → 폴러 사이클을 스레드 2개로 동시 실행(`ExecutorService` 또는 병렬 호출) → 각 outbox의 발행 횟수 정확히 1, `PUBLISHED` 카운트 100 검증. `@RepeatedTest(10)`으로 안정성 확인.
 
 **Checkpoint**: SC-002 통과. 다중 인스턴스 안전 검증.
 
