@@ -81,7 +81,10 @@ verification:
   publisher:
     type: redis-stream  # http -> RestClient를 사용한 api 호출
   redis:
-    stream-key: verification:stream
+    stream-key: verify:requests   # Spec 005 — 컨슈머 계약 정합
+  # Spec 005 — 테스트는 callback 을 MockMvc/RestClient 로 직접 호출하므로 dummy URL.
+  callback-url: http://localhost:0/internal-test-only
+  threshold: "0.088"
 
 outbox:
   republisher:
