@@ -22,6 +22,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    # Spec 005 — verification_record 의 generated column + unique constraint 는
+    # `VerificationRecordSchemaInitializer`(ApplicationRunner 패턴) 가 부팅 시 적용한다.
+    # schema.sql 방식은 stored procedure 본문의 `;` 가 Spring ScriptUtils 의 단순 split
+    # 과 충돌해 회귀를 일으켰음(phase2-verify.md 참조).
 
 logging:
   level:

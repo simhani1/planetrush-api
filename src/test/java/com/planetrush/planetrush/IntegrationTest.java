@@ -2,12 +2,15 @@ package com.planetrush.planetrush;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
+
+import com.planetrush.planetrush.verification.testsupport.VerificationRecordSchemaInitializer;
 
 /**
  * 통합 테스트 공통 베이스.
@@ -27,6 +30,7 @@ import org.testcontainers.utility.DockerImageName;
  */
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(VerificationRecordSchemaInitializer.class)
 public abstract class IntegrationTest {
 
 	static final MySQLContainer<?> MYSQL = new MySQLContainer<>(DockerImageName.parse("mysql:8.0.36"))
