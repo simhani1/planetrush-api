@@ -42,7 +42,9 @@ public record VerificationOutboxPayload(
 				targetImgUrl,
 				standardImgUrl,
 				memberId,
-				planetId
+				planetId,
+				callbackUrl,
+				threshold
 		);
 	}
 }

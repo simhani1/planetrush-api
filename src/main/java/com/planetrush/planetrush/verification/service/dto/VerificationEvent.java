@@ -27,12 +27,15 @@ public record VerificationEvent(
 	}
 
 	public MessageCommand toMessageCommand() {
+		// Spec 005 — R-008 dead path. 신규 흐름 cutover 후 호출 0회. 컴파일 유지용 더미 매핑.
 		return new MessageCommand(
 			createEventId(),
 			targetImg,
 			standardImg,
 			memberId,
-			planetId
+			planetId,
+			null,
+			null
 		);
 	}
 

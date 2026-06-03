@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.planetrush.planetrush.outbox.domain.EventType;
 import com.planetrush.planetrush.outbox.domain.OutboxEvent;
 import com.planetrush.planetrush.outbox.dto.OutboxRecordCommand;
+import com.planetrush.planetrush.outbox.event.OutboxEventRecordedEvent;
 import com.planetrush.planetrush.outbox.exception.NoOutboxEventException;
 import com.planetrush.planetrush.outbox.repository.OutboxRepository;
 
@@ -36,6 +38,7 @@ public class VerificationExternalEventRecorder {
 
 	private final OutboxRepository outboxRepository;
 	private final ObjectMapper objectMapper;
+	private final ApplicationEventPublisher eventPublisher;
 
 	/**
 	 * 컨슈머 callback URL. {@code application.yml} 의 {@code verification.callback-url} 키로 외부화.
@@ -50,7 +53,12 @@ public class VerificationExternalEventRecorder {
 	private String threshold;
 
 	/**
-	 * 인증 이벤트를 Outbox 에 PENDING 으로 적재한다. AFTER_COMMIT 리스너가 stream 으로 발행한다.
+	 * 인증 이벤트를 Outbox 에 PENDING 으로 적재하고 stream 발행 트리거(AFTER_COMMIT) 를 publish 한다.
+	 *
+	 * <p>Spec 005 — Phase 3. {@link OutboxEventRecordedEvent} 를 publish 해
+	 * {@code VerificationOutboxPublishListener} (AFTER_COMMIT) 가 Redis Stream 으로 발행하게 한다.
+	 * 본 메서드는 메인 트랜잭션 안에서 호출되므로, 커밋이 실패하면 outbox INSERT 와 이벤트 publish 가
+	 * 함께 롤백된다 — 헌법 IV 의 원자성 보장.
 	 */
 	@Transactional
 	public void save(OutboxRecordCommand command) {
@@ -62,6 +70,8 @@ public class VerificationExternalEventRecorder {
 			EventType.VERIFICATION_REQUEST,
 			payload
 		));
+		// AFTER_COMMIT 트리거. publish 자체는 메인 트랜잭션 커밋 이후로 지연된다(헌법 IV).
+		eventPublisher.publishEvent(new OutboxEventRecordedEvent(command));
 	}
 
 	private String buildPayload(OutboxRecordCommand command) {

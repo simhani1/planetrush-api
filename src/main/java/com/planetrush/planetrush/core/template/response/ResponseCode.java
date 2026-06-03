@@ -46,6 +46,8 @@ public enum ResponseCode {
 
 	// 8000 - VERIFICATION
 	ALREADY_VERIFIED("8000", "오늘 이미 인증을 완료한 사용자입니다."),
+	VERIFICATION_REQUEST_NOT_FOUND("8001", "인증 요청을 찾을 수 없습니다."),
+	INVALID_VERIFICATION_CALLBACK_PAYLOAD("8002", "인증 결과 콜백 페이로드 형식이 올바르지 않습니다."),
 	;
 
 	private String code;
