@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.planetrush.planetrush.outbox.OutboxPublishingHelper;
 import com.planetrush.planetrush.outbox.domain.OutboxEvent;
 import com.planetrush.planetrush.outbox.domain.OutboxStatus;
 import com.planetrush.planetrush.outbox.repository.OutboxRepository;
-import com.planetrush.planetrush.verification.event.publisher.VerificationMessagePublisher;
 import com.planetrush.planetrush.verification.service.dto.MessageCommand;
 
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OutboxRepublisher {
 
 	private final OutboxRepository outboxRepository;
-	private final VerificationMessagePublisher messagePublisher;
+	private final OutboxPublishingHelper outboxPublishingHelper;
 	private final ObjectMapper objectMapper;
 	private final OutboxRepublisherProperties properties;
 
@@ -69,8 +69,13 @@ public class OutboxRepublisher {
 
 	/**
 	 * outbox 1건 재발행. payload를 역직렬화해 {@link MessageCommand}로 변환 후
-	 * 기존 발행 경로({@link VerificationMessagePublisher})에 위임한다.
-	 * 발행이 성공하면 위임 대상이 내부에서 {@link OutboxEvent#published()}를 호출한다.
+	 * {@link OutboxPublishingHelper}에 위임한다. 본 메서드는 {@link #republishPending()}의
+	 * {@code @Transactional} 안에서 호출되므로, 헬퍼는 본 트랜잭션을 상속받아 SKIP LOCKED
+	 * 락 보유 상태에서 안전하게 status 갱신한다(self-deadlock 0).
+	 *
+	 * <p>Spec 005 Phase 4 fix — 이전 흐름은 publisher 가 자체 {@code @Transactional(REQUIRES_NEW)}
+	 * 를 들어 락 보유 row 에 새 트랜잭션이 접근 시 self-deadlock 이 발생했다. publisher 를
+	 * 어댑터로 단순화하고 status 갱신 책임을 본 호출자(외부 트랜잭션 보유) 가 가져온다.
 	 *
 	 * @return 발행 후 상태가 PUBLISHED이면 true
 	 */
@@ -78,7 +83,7 @@ public class OutboxRepublisher {
 		try {
 			VerificationOutboxPayload payload =
 					objectMapper.readValue(event.getPayload(), VerificationOutboxPayload.class);
-			messagePublisher.publish(payload.toMessageCommand(event));
+			outboxPublishingHelper.publishAndMarkPublished(payload.toMessageCommand(event));
 			return event.getStatus() == OutboxStatus.PUBLISHED;
 		} catch (Exception e) {
 			log.warn("[OutboxRepublisher] failed to republish outbox event id={}", event.getId(), e);

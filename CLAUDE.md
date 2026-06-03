@@ -23,3 +23,9 @@ shell commands, and other important information, read the current plan:
 | 날짜 | 변경 내용 | 대상 | 사유 |
 |------|----------|------|------|
 | 2026-05-22 | 초기 구성 — 4-에이전트 팀(code-implementer·test-author·build-verifier·code-reviewer) + `sdd-harness` 오케스트레이터 | 전체 | SDD 구현 단계 결과물 품질 향상 |
+
+## 운영 함정 (Spec 005 학습)
+
+- `@TransactionalEventListener(AFTER_COMMIT)` 안에서 기본 propagation 의 `@Transactional` 만 부착하면 동기화 매니저 정리 직전의 회색지대에서 잔재 EntityManager 가 재사용돼 dirty checking 이 사일런트 무시될 수 있다 — 리스너 메서드 자체에 `REQUIRES_NEW` 를 부착해 새 EntityManager 를 강제.
+- `OutboxRepublisher` 처럼 `SELECT ... FOR UPDATE SKIP LOCKED` 로 row 락을 보유한 외부 트랜잭션이 호출하는 메서드에 `REQUIRES_NEW` 를 부착하면 같은 row 에 새 트랜잭션이 막혀 self-deadlock. 외부 발행 어댑터(`infra/publisher/`) 는 트랜잭션을 자체 들지 말고 호출자에게 위임 (헌법 II 실전 적용 — publisher = XADD 만, status 전이 = 호출자).
+- 빌드 캐시: 코드 변경 0이면 `./gradlew check` 가 ms 안에 캐시 hit — 디버깅 사이클에 유용.

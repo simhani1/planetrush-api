@@ -13,13 +13,11 @@ import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.planetrush.planetrush.outbox.VerificationExternalEventRecorder;
 import com.planetrush.planetrush.verification.service.dto.MessageCommand;
 
 class VerificationRedisStreamPublisherTest {
 
 	private StringRedisTemplate redisTemplate;
-	private VerificationExternalEventRecorder eventRecorder;
 	@SuppressWarnings("rawtypes")
 	private org.springframework.data.redis.core.StreamOperations streamOperations;
 	private VerificationRedisStreamPublisher publisher;
@@ -29,13 +27,15 @@ class VerificationRedisStreamPublisherTest {
 		redisTemplate = mock(StringRedisTemplate.class);
 		streamOperations = mock(org.springframework.data.redis.core.StreamOperations.class);
 		when(redisTemplate.opsForStream()).thenReturn(streamOperations);
-		publisher = new VerificationRedisStreamPublisher(redisTemplate, eventRecorder);
+		publisher = new VerificationRedisStreamPublisher(redisTemplate);
 		ReflectionTestUtils.setField(publisher, "streamKey", "verify:requests");
 	}
 
 	@Test
 	void publishAddsRecordToStreamWithBriefContractKeys() {
 		// Spec 005 — phase3-review §P1-1. stream entry 키는 BRIEF §3-1 정합.
+		// Phase 4 후속 fix: publisher 는 Redis XADD 만 수행. outbox status 갱신은 호출자 책임
+		// (OutboxPublishingHelper) — 본 단위 테스트는 stream entry 매핑만 검증.
 		MessageCommand command = new MessageCommand(
 			"req-1",
 			"http://example.com/target.jpg",
