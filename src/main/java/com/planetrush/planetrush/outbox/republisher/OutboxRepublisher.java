@@ -58,13 +58,10 @@ public class OutboxRepublisher {
 		if (batch.isEmpty()) {
 			return;
 		}
-		int succeeded = 0;
 		for (OutboxEvent event : batch) {
-			if (republishOne(event)) {
-				succeeded++;
-			}
+			republishOne(event);
 		}
-		log.info("[OutboxRepublisher] republish cycle done: {}/{} succeeded", succeeded, batch.size());
+		log.info("[OutboxRepublisher] republish cycle done: {} events processed", batch.size());
 	}
 
 	/**
@@ -77,17 +74,16 @@ public class OutboxRepublisher {
 	 * 를 들어 락 보유 row 에 새 트랜잭션이 접근 시 self-deadlock 이 발생했다. publisher 를
 	 * 어댑터로 단순화하고 status 갱신 책임을 본 호출자(외부 트랜잭션 보유) 가 가져온다.
 	 *
-	 * @return 발행 후 상태가 PUBLISHED이면 true
+	 * <p>한 건의 발행 실패는 흡수해 다음 건으로 진행한다 — 실패 건은 PENDING 으로 남아
+	 * 다음 사이클에 재시도된다(FR-003).
 	 */
-	private boolean republishOne(OutboxEvent event) {
+	private void republishOne(OutboxEvent event) {
 		try {
 			VerificationOutboxPayload payload =
 					objectMapper.readValue(event.getPayload(), VerificationOutboxPayload.class);
 			outboxPublishingHelper.publishAndMarkPublished(payload.toMessageCommand(event));
-			return event.getStatus() == OutboxStatus.PUBLISHED;
 		} catch (Exception e) {
 			log.warn("[OutboxRepublisher] failed to republish outbox event id={}", event.getId(), e);
-			return false;
 		}
 	}
 }
