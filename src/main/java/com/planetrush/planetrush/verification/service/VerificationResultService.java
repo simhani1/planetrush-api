@@ -1,6 +1,5 @@
 package com.planetrush.planetrush.verification.service;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +14,7 @@ import com.planetrush.planetrush.verification.domain.VerificationRequest;
 import com.planetrush.planetrush.verification.domain.VerificationRequestStatus;
 import com.planetrush.planetrush.verification.repository.VerificationRecordRepository;
 import com.planetrush.planetrush.verification.repository.VerificationRequestRepository;
+import com.planetrush.planetrush.verification.repository.custom.VerificationRecordRepositoryCustom;
 import com.planetrush.planetrush.verification.service.dto.VerificationCallbackCommand;
 
 import lombok.RequiredArgsConstructor;
@@ -40,8 +40,8 @@ import lombok.extern.slf4j.Slf4j;
  *   </li>
  *   <li><b>VerificationRecord 저장</b> (R-003 / FR-007)
  *       <ul>
- *         <li>SUCCESS/FAIL — {@code verificationRecordRepository.save(...)} 시도.
- *             {@link DataIntegrityViolationException} 발생 시(사용자·챌린지·날짜 unique 위반) skip.
+ *         <li>SUCCESS/FAIL — {@code existsTodayRecord} 로 사용자·챌린지·날짜 기존 기록 조회 후 없으면 {@code save(...)}.
+ *             이미 있으면 skip(멱등) — callback 동시 도착(race) 미발생 전제(spec US3).
  *             status 전이는 1단계에서 이미 완료.</li>
  *         <li>ERROR — 저장 단계 자체 건너뛰기 (clarify Q2 — 사용자 재시도 권한 보존).</li>
  *       </ul>
@@ -62,6 +62,7 @@ public class VerificationResultService {
 
 	private final VerificationRequestRepository verificationRequestRepository;
 	private final VerificationRecordRepository verificationRecordRepository;
+	private final VerificationRecordRepositoryCustom verificationRecordRepositoryCustom;
 	private final MemberRepository memberRepository;
 	private final PlanetRepository planetRepository;
 
@@ -140,19 +141,21 @@ public class VerificationResultService {
 			.orElseThrow(() -> new PlanetNotFoundException(
 				"Planet not found with ID: " + request.getPlanetId()));
 
-		try {
-			verificationRecordRepository.save(VerificationRecord.builder()
-				.verified(Boolean.TRUE.equals(verified))
-				.similarityScore(command.similarityScore() != null ? command.similarityScore() : 0)
-				.planet(planet)
-				.member(member)
-				.imgUrl(request.getTargetImgUrl())
-				.build());
-		} catch (DataIntegrityViolationException e) {
-			// R-003 — 사용자·챌린지·날짜 unique 위반. 다른 PENDING 의 callback 이 record 를 먼저 저장.
-			// status 전이는 1단계에서 이미 완료. 본 callback 은 record 추가 저장 skip.
+		// R-003 — 사용자·챌린지·날짜 단위 멱등 가드. 다른 requestId 의 callback 이 오늘 record 를
+		// 이미 저장했다면(성공/실패 무관) 추가 저장하지 않는다. status 전이는 1단계에서 이미 완료.
+		// 조회-후-저장 방식 — callback 동시 도착(race) 은 발생하지 않는다는 전제(spec US3).
+		if (verificationRecordRepositoryCustom.existsTodayRecord(member, planet)) {
 			// 헌법 V — requestId 만 출력.
-			log.info("verification record uniq guard hit, skip insert: {}", command.requestId());
+			log.info("verification record already exists today, skip insert: {}", command.requestId());
+			return;
 		}
+
+		verificationRecordRepository.save(VerificationRecord.builder()
+			.verified(Boolean.TRUE.equals(verified))
+			.similarityScore(command.similarityScore() != null ? command.similarityScore() : 0)
+			.planet(planet)
+			.member(member)
+			.imgUrl(request.getTargetImgUrl())
+			.build());
 	}
 }

@@ -117,7 +117,7 @@ Spring Boot 단일 모듈. 모든 경로는 repo root 기준.
 ### Tests for User Story 3
 
 - [ ] T027 [P] [US3] `src/test/java/com/planetrush/planetrush/verification/VerificationCallbackIdempotencyTest.java` 신규 — `IntegrationTest` 상속. 시나리오: (1) 인증 요청 1건 발행, (2) 정상 callback 1회 호출 → `VerificationRequest.status=SUCCESS`, `VerificationRecord` 1건 저장 확인, (3) 동일 payload callback 2회 추가 호출 → 두 번 모두 200, (4) DB 상태 불변(status·record 카운트 동일) 확인. 추가: ERROR 종착 후 SUCCESS callback 도착 시 상태 역전 금지 검증(spec US3 Acceptance Scenario 2). **SC-005a 매핑.**
-- [ ] T028 [P] [US3] `src/test/java/com/planetrush/planetrush/verification/VerificationDailyIdempotencyTest.java` 신규 — `IntegrationTest` 상속. 시나리오: (1) 같은 사용자·planet 으로 인증 요청 2건 발행(서로 다른 requestId), (2) 두 PENDING 모두 SUCCESS callback 도착(직렬 실행), (3) 두 `VerificationRequest` 모두 SUCCESS 종착 + `VerificationRecord` 정확히 1건만 저장 확인. (4) 추가 `RepeatedTest(5)` 로 동시 race(두 callback 을 `ExecutorService` 로 동시 호출) 시에도 record 1건 보존 확인 — DB unique 제약 안전망(R-003). **SC-005b 매핑.**
+- [ ] T028 [P] [US3] `src/test/java/com/planetrush/planetrush/verification/VerificationDailyIdempotencyTest.java` 신규 — `IntegrationTest` 상속. 시나리오: (1) 같은 사용자·planet 으로 인증 요청 2건 발행(서로 다른 requestId), (2) 두 PENDING 모두 SUCCESS callback 도착(직렬 실행), (3) 두 `VerificationRequest` 모두 SUCCESS 종착 + `VerificationRecord` 정확히 1건만 저장 확인 — 저장 전 `existsTodayRecord`(verified 무관, unique 제약과 동일 키) 조회-후-저장 멱등. callback 동시 도착(race) 은 미발생 전제(US3) 라 직렬 시나리오만 검증한다. **SC-005b 매핑.**
 - [ ] T029 [P] [US3] `src/test/java/com/planetrush/planetrush/verification/InternalVerificationResultControllerSliceTest.java` 신규 — `@WebMvcTest(InternalVerificationResultController.class)`. 페이로드 분기 검증: (a) 정상 payload → 서비스 호출 1회, (b) 오류 payload(`error` 필드) → 서비스 호출 1회(분기 인자 다름), (c) 두 패턴 모두 어긋남(필수 필드 누락) → 400, (d) UUID 형식 위반 → 400, (e) 존재하지 않는 requestId 도 200(FR-011 흡수 — mocked 서비스 영향 행 수 0 모의). 부수: 헌법 V 정합 — 페이로드 내용이 INFO 로그에 평문 노출되지 않음 (log capture 검증).
 
 ---
@@ -180,7 +180,7 @@ Phase 6 (Polish, T030~T033) ─ 모든 US 완료 후 PR/머지 준비 단계.
 | SC-003 | 컨슈머 미가용 시 인증 10건 PENDING 보존, 실패율 0%, 복구 후 종착 전환 | **T025** | `VerificationConsumerOutageIntegrationTest` |
 | SC-004 | Stream 발행 실패 시 Republisher 가 자동 재발행해 결국 종착 | **T026** | `VerificationOutboxRepublisherIntegrationTest` |
 | SC-005a | 동일 requestId callback 2회 호출 시 상태 전이 1회, record 저장 1건 | **T027** | `VerificationCallbackIdempotencyTest` |
-| SC-005b | 같은 사용자·챌린지·날짜 다중 requestId callback 모두 SUCCESS 도 record 1건만 보존(동시 race 포함) | **T028** | `VerificationDailyIdempotencyTest` (RepeatedTest 동시성 포함) |
+| SC-005b | 같은 사용자·챌린지·날짜 다중 requestId callback 모두 SUCCESS 도 record 1건만 보존(직렬, 동시 race 미발생 전제) | **T028** | `VerificationDailyIdempotencyTest` |
 | SC-006 | 인수 기준 ↔ 테스트 매핑이 spec ↔ tasks 양방향으로 명시 | **본 표 자체** | 본 tasks.md 의 §SC↔Task Mapping |
 | SC-007 | 인증 처리/callback 경로에 시크릿 평문 로그 미출현 | **T030** | `./gradlew verifySecretLogScan` 게이트 |
 

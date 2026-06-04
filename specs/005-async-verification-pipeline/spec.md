@@ -27,7 +27,7 @@
 
 - Q: 인증 결과 단대단(PENDING → 종착) SLO 를 정량값(p95/p99 등)으로 둘까? → A: 두지 않는다. 결과 처리는 비동기(컨슈머 추론)이므로 p95 가 본 스펙의 신뢰성 측정에 의미를 주지 않는다. 본 스펙은 "결국 종착" 함수만 보장하고, 인증 API 의 부하/성능 테스트(throughput·latency 측정 등)는 본 스펙 범위에서 제거한다.
 - Q: `ERROR` (컨슈머가 `image_load_failed` 등을 보고) callback 시 도메인 인증 기록(`VerificationRecord`)을 저장할지? → A: 저장하지 않는다. ERROR 는 시스템/입력 측 문제이지 사용자의 인증 시도 결과가 아니므로, 인증 요청 레코드의 status 만 `ERROR` 로 기록하고 도메인 `VerificationRecord` 행은 만들지 않아 사용자가 오늘의 재시도 권한을 보존하게 한다. `SUCCESS`(`verified=true`)·`FAIL`(`verified=false`) 은 기존 동기 흐름과 동일하게 `VerificationRecord` 1건 저장. (기존 코드 확인: `VerificationServiceImpl.saveVerificationResult` 는 verified 값과 무관하게 record 를 항상 저장한다 — 본 스펙은 그 경로를 ERROR 케이스에서만 우회한다.)
-- Q: 같은 사용자·챌린지에 PENDING 인증 요청이 떠 있는 동안 또 인증 요청을 보내면? (서로 다른 `requestId` 라 FR-004 의 callback 멱등으론 막히지 않음) → A: **입력 측 가드는 추가하지 않는다**. 사용자는 PENDING 중복 요청을 보낼 수 있다(컨슈머는 둘 다 추론). 다만 **결과 저장 시점**(callback 핸들러가 `VerificationRecord` 를 저장하는 시점) 에 "오늘 같은 사용자·챌린지에 이미 종착된 `VerificationRecord` 가 있으면 새 record 저장을 거부" 가드를 둔다. 즉 PENDING N건 / `VerificationRecord` 1건의 불변식을 결과 저장 측에서 보장한다. 두 callback 이 동시에 race 하는 경우의 안전망은 DB 유니크 제약(member_id, planet_id, 날짜) 또는 동등한 동시성 제어로 보강한다(plan 단계 결정). 두 번째 callback 은 status=SUCCESS/FAIL 응답까지 정상 반환되지만 `VerificationRecord` 는 추가되지 않는다.
+- Q: 같은 사용자·챌린지에 PENDING 인증 요청이 떠 있는 동안 또 인증 요청을 보내면? (서로 다른 `requestId` 라 FR-004 의 callback 멱등으론 막히지 않음) → A: **입력 측 가드는 추가하지 않는다**. 사용자는 PENDING 중복 요청을 보낼 수 있다(컨슈머는 둘 다 추론). 다만 **결과 저장 시점**(callback 핸들러가 `VerificationRecord` 를 저장하는 시점) 에 "오늘 같은 사용자·챌린지에 이미 종착된 `VerificationRecord` 가 있으면 새 record 저장을 거부" 가드를 둔다. 즉 PENDING N건 / `VerificationRecord` 1건의 불변식을 결과 저장 측에서 보장한다. 두 callback 이 동시에 race 하는 경우는 발생하지 않는다고 전제한다(US3 가정). 결과 저장 측 멱등은 저장 전 조회-후-저장(`existsTodayRecord` — verified 무관·unique 제약과 동일 키) 으로 보장하며, DB 유니크 제약(member_id, planet_id, 날짜) 은 데이터 정합성 최종 방어로 유지한다. 두 번째 callback 은 status=SUCCESS/FAIL 응답까지 정상 반환되지만 `VerificationRecord` 는 추가되지 않는다.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -84,7 +84,7 @@
 - 존재하지 않는 요청 식별자로 클라이언트가 상태 조회 → 404 응답.
 - 컨슈머가 `image_load_failed` 페이로드로 callback → 상태 ERROR 로 기록(SUCCESS/FAIL 과 구분되는 종착 상태).
 - 컨슈머 callback 페이로드가 형식 오류(필수 필드 누락 등) → 400 응답. 본 케이스는 컨슈머/Spring 계약 위반이므로 ACK 되도록 시스템이 흡수하지 않는다.
-- 같은 사용자가 같은 챌린지에 동시 2건 인증 요청(서로 다른 `requestId`, 두 요청 모두 PENDING) → 컨슈머는 두 건 모두 추론하고 callback 도 두 번 도착한다. FR-004의 사용자·챌린지·날짜 단위 멱등 가드가 결과 저장 시점에 작동해 `VerificationRecord` 는 1건만 보존된다. 두 인증 요청 레코드는 각자 SUCCESS/FAIL 로 종착 표시되며 클라이언트는 어느 쪽 식별자로 조회하든 결과를 받는다.
+- 같은 사용자가 같은 챌린지에 2건 인증 요청(서로 다른 `requestId`, 두 요청 모두 PENDING) → 컨슈머는 두 건 모두 추론하고 callback 도 (직렬로) 두 번 도착한다. FR-004의 사용자·챌린지·날짜 단위 멱등 가드가 결과 저장 시점에 작동해 `VerificationRecord` 는 1건만 보존된다. 두 인증 요청 레코드는 각자 SUCCESS/FAIL 로 종착 표시되며 클라이언트는 어느 쪽 식별자로 조회하든 결과를 받는다.
 - 매우 오래된 PENDING(예: 24시간 이상) → 본 스펙은 reaper/타임아웃을 도입하지 않는다(아웃 오브 스코프). 사용자 가시 UX 는 "처리 중" 으로 무한 노출되지 않도록 후속 스펙에서 다룬다.
 
 ## Requirements *(mandatory)*

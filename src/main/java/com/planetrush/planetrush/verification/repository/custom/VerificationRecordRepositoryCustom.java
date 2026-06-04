@@ -77,6 +77,31 @@ public class VerificationRecordRepositoryCustom {
 	}
 
 	/**
+	 * 오늘 인증 기록(성공/실패 무관)이 이미 존재하는지 조회합니다.
+	 *
+	 * <p>Spec 005 — callback 의 record 저장 멱등 가드. {@code uniq_verification_record_member_planet_date}
+	 * 제약과 동일한 키(member·planet·날짜) 로 조회한다 — {@link #findTodayRecord} 와 달리 {@code verified}
+	 * 조건을 두지 않는다(FAIL 기록도 unique 제약 대상이므로 존재 판정에 포함해야 한다).
+	 *
+	 * @param member 회원 엔티티
+	 * @param planet 행성 엔티티
+	 * @return 오늘 기록이 하나라도 있으면 true
+	 */
+	public boolean existsTodayRecord(Member member, Planet planet) {
+		LocalDate today = LocalDate.now();
+		LocalDateTime startOfToday = today.atStartOfDay();
+		LocalDateTime endOfToday = today.atTime(LocalTime.MAX);
+		Integer hit = queryFactory.selectOne()
+			.from(verificationRecord)
+			.where(
+				eqMember(member),
+				eqPlanet(planet),
+				uploadDateBetween(startOfToday, endOfToday))
+			.fetchFirst();
+		return hit != null;
+	}
+
+	/**
 	 * 행성의 성공 인증 기록 중 제일 최신 데이터를 조회합니다.
 	 *
 	 * @param member 회원 엔티티
