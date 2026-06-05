@@ -28,7 +28,7 @@
 
 ```
 getCurrentVersion():
-    # 60초 로컬 캐시(statistics-version) 경유
+    # 매 요청 DB 파생 (별도 버전 캐시 없음, R4)
     endTimeMax = jobLogRepository.findLatestCompletedProgressCalculationEndTime()  # Optional<LocalDateTime>
     if endTimeMax.isPresent():
         date = endTimeMax.get().atZone(Asia/Seoul).toLocalDate()
@@ -40,7 +40,7 @@ getCurrentVersion():
 **보장**:
 - C1 (단조): 연속 호출에서 반환 날짜는 같거나 증가.
 - C2 (완료 후 전환): 새 날 `progressCalculation` 의 `endTime` 이 set 되기 전에는 직전 날짜 반환.
-- C3 (전역 일관): 동일 DB 상태에서 모든 인스턴스 동일 반환(로컬 캐시로 최대 60초 지연 수렴).
+- C3 (전역 일관): 동일 DB 상태에서 모든 인스턴스 동일 반환(매 요청 DB 파생 → 배치 완료 즉시 수렴).
 
 ## 4. 통계 조회 흐름 계약
 

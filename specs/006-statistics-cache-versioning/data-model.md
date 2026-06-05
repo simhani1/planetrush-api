@@ -26,7 +26,7 @@ return version.format("yyyy-MM-dd")
 **불변식**:
 - **단조 진행(FR-009)**: `endTime` 은 증가만 하므로 version 날짜도 같거나 증가. 과거로 회귀 불가.
 - **완료 후 전환(FR-003)**: 새 날 배치가 *완료*(endTime set)되기 전에는 version 이 직전 날짜로 유지.
-- **전역 단일(FR-008)**: 모든 사용자·인스턴스가 동일 version 을 본다(같은 DB MAX 결과). 해석 결과는 60초 로컬 캐시(R4)로 메모이즈 — 전환 후 최대 60초 내 수렴.
+- **전역 단일(FR-008)**: 모든 사용자·인스턴스가 동일 version 을 본다(같은 DB MAX 결과). 버전은 매 요청 DB 에서 직접 파생(R4, 메모 없음) — 배치 완료 즉시 전 인스턴스 동일 반영.
 
 ## 2. JobLog (기존 엔티티 — 통계 배치 실행 기록)
 
@@ -44,7 +44,7 @@ return version.format("yyyy-MM-dd")
 - `findLatestCompletedProgressCalculationEndTime(): Optional<LocalDateTime>`
   - `select max(endTime)` from JobLog where `jobType = 'progressCalculation'` and `endTime is not null`.
   - 스칼라 집계 — Entity→DTO 수동 매핑 아님. N+1 무관.
-- 권장 인덱스: `job_log(job_type, end_time)` — MAX 조회 가속(선택, 데이터량 따라).
+- 인덱스: `job_log(job_type, end_time)` 복합 인덱스 **추가**(R4) — 매 요청 `MAX(endTime)` 을 인덱스 끝값 1건 읽기로 처리.
 
 ## 3. 통계 캐시 항목 (Redis)
 
