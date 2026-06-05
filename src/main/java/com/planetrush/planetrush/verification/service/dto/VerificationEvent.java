@@ -13,8 +13,12 @@ public record VerificationEvent(
 ) {
 
 	public OutboxRecordCommand toRecordCommand() {
+		// Spec 005 — T004 호환: requestId/eventId 모두 deterministic eventId 로 주입.
+		// Phase 3 (T023) 에서 신규 흐름으로 교체되며 본 호출 경로 자체가 제거된다 (R-008 cutover).
+		String eventId = createEventId();
 		return new OutboxRecordCommand(
-			createEventId(),
+			eventId,
+			eventId,
 			targetImg,
 			standardImg,
 			memberId,
@@ -23,12 +27,15 @@ public record VerificationEvent(
 	}
 
 	public MessageCommand toMessageCommand() {
+		// Spec 005 — R-008 dead path. 신규 흐름 cutover 후 호출 0회. 컴파일 유지용 더미 매핑.
 		return new MessageCommand(
 			createEventId(),
 			targetImg,
 			standardImg,
 			memberId,
-			planetId
+			planetId,
+			null,
+			null
 		);
 	}
 

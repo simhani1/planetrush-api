@@ -18,14 +18,34 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * 챌린지 인증 기록 entity.
+ *
+ * <p>Spec 005 — data-model.md §VerificationRecord. 본 스펙에서 컬럼은 추가하지 않고
+ * unique 인덱스만 추가한다 (R-003): 사용자·챌린지·날짜 단위 멱등 단일 안전망.
+ *
+ * <p>{@code upload_date_only} 는 MySQL generated column —
+ * {@code GENERATED ALWAYS AS (DATE(upload_date)) STORED}. JPA {@code ddl-auto} 의
+ * generated column 자동 생성 신뢰도가 낮으므로 운영은 수동 DDL
+ * ({@code schema-mysql-uniq.sql}), 테스트는 {@code VerificationRecordSchemaInitializer}
+ * ({@code @TestConfiguration} + {@code ApplicationRunner} 패턴 — INFORMATION_SCHEMA 가드
+ * 후 동적 ALTER) 로 멱등 적용한다. (quickstart §6-2 참조.)
+ */
 @Getter
 @Entity
-@Table(name = "verification_record")
+@Table(
+	name = "verification_record",
+	uniqueConstraints = @UniqueConstraint(
+		name = "uniq_verification_record_member_planet_date",
+		columnNames = {"member_id", "planet_id", "upload_date_only"}
+	)
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VerificationRecord {
 

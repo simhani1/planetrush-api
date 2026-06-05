@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 
 import java.util.UUID;
 
@@ -74,8 +75,12 @@ class OutboxRepublisherIntegrationTest extends IntegrationTest {
 		String eventId = UUID.randomUUID().toString();
 		outboxRepository.save(OutboxEvent.pending(eventId, EventType.VERIFICATION_REQUEST, payloadJson()));
 
-		// when: 1차 사이클 — 발행이 일시 장애 (published() 미호출)
-		doNothing().when(messagePublisher).publish(any(MessageCommand.class));
+		// when: 1차 사이클 — 발행이 일시 장애.
+		// Spec 005 Phase 4 후속 fix 정합: publisher 계약은 "발행 성공 = void / 실패 = 예외 throw".
+		// (헬퍼가 publisher 가 예외 안 던지면 성공으로 간주해 status 를 갱신하므로,
+		//  실패는 명시적 예외로 표현해야 한다.)
+		doThrow(new RuntimeException("simulated transient publish failure"))
+				.when(messagePublisher).publish(any(MessageCommand.class));
 		outboxRepublisher.republishPending();
 
 		// then: 여전히 PENDING

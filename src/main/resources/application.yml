@@ -86,7 +86,10 @@ verification:
   publisher:
     type: redis-stream  # http -> RestClient를 사용한 api 호출
   redis:
-    stream-key: verification:stream
+    stream-key: verify:requests   # Spec 005 — 컨슈머 계약(BRIEF §3-1, contracts/stream-message.md)과 정합
+  # Spec 005 — 컨슈머 callback 외부화. dev/prod 는 환경변수로 override.
+  callback-url: ${VERIFICATION_CALLBACK_URL:http://host.docker.internal:8080/api/v1/internal/verification-results}
+  threshold: "0.088"
 
 outbox:
   republisher:
