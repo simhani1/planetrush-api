@@ -37,7 +37,7 @@ return version.format("yyyy-MM-dd")
 | id | Long (PK) | |
 | jobType | String | `progressCalculation` 필터 대상 |
 | startTime | LocalDateTime | 배치 시작 |
-| endTime | LocalDateTime (nullable) | 완료 시각. null = 진행 중/미완료 |
+| endTime | LocalDateTime (영속 시 NOT NULL) | 완료 시각. 엔티티는 `finish()`(endTime 설정) 후에만 save → 진행 중(미완료) row 는 영속되지 않음. "배치 진행 중"은 *해당 날짜 완료 row 부재*로 표현 |
 | elapsedTime | String | 소요 |
 
 **신규 조회 (QueryDSL custom, 헌법 III 정합)**:
