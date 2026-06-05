@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -15,7 +16,10 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "job_log")
+@Table(
+	name = "job_log",
+	indexes = @Index(name = "idx_joblog_type_endtime", columnList = "job_type, end_time")
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class JobLog {
 

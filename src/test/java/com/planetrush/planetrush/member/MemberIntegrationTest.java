@@ -95,11 +95,8 @@ public class MemberIntegrationTest extends IntegrationTest {
 		}
 
 		// THEN
-		Cache cache = cacheManager.getCache("challenge-avg");
-		assertThat(cache).isNotNull()
-			.extracting(it -> it.get(member.getId())).isNotNull()
-			.extracting(it -> it.get()).isNotNull()
-			.isInstanceOf(GetMyProgressAvgDto.class);
+		// Redis + 버전키 이관: 캐시 키가 "memberId:version" 이라 평문 memberId 직접 조회는 항상 null.
+		// 캐싱 여부는 캐시 내부 구조 조회(brittle) 대신 "10회 호출에도 Flask 1회"라는 행위로 검증한다.
 		verify(flaskApiClient, times(1)).getMyProgressAvg(member.getId());
 	}
 
@@ -161,7 +158,9 @@ public class MemberIntegrationTest extends IntegrationTest {
 		startLatch.countDown();
 		executor.shutdown();
 		for (Future<GetMyProgressAvgDto> future : futures) {
-			assertThat(future.get(5, TimeUnit.SECONDS)).isEqualTo(dto);
+			// Redis round-trip 으로 역직렬화된 새 인스턴스가 반환되고 DTO 는 equals/hashCode 미구현이므로,
+			// 참조 동등성 대신 값 동등성으로 비교한다(분산 캐시에서 참조 동일 기대는 잘못된 가정).
+			assertThat(future.get(5, TimeUnit.SECONDS)).usingRecursiveComparison().isEqualTo(dto);
 		}
 		assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
 
