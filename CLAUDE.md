@@ -2,15 +2,15 @@
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- Active spec: `specs/005-async-verification-pipeline/`
-- Plan: `specs/005-async-verification-pipeline/plan.md`
-- Research: `specs/005-async-verification-pipeline/research.md`
-- Data model: `specs/005-async-verification-pipeline/data-model.md`
-- Contracts: `specs/005-async-verification-pipeline/contracts/`
-  (rest-api.md · stream-message.md)
-- Quickstart: `specs/005-async-verification-pipeline/quickstart.md`
+- Active spec: `specs/006-statistics-cache-versioning/`
+- Plan: `specs/006-statistics-cache-versioning/plan.md`
+- Research: `specs/006-statistics-cache-versioning/research.md`
+- Data model: `specs/006-statistics-cache-versioning/data-model.md`
+- Contracts: `specs/006-statistics-cache-versioning/contracts/`
+  (cache-key.md)
+- Quickstart: `specs/006-statistics-cache-versioning/quickstart.md`
 - Constitution: `.specify/memory/constitution.md`
-- Prior specs (foundation·infra): `specs/001-secure-logging-test-foundation/`, `specs/002-outbox-republisher/`
+- Prior specs (foundation·infra): `specs/001-secure-logging-test-foundation/`, `specs/002-outbox-republisher/`, `specs/005-async-verification-pipeline/`
 <!-- SPECKIT END -->
 
 ## 하네스: SDD 구현 팀
