@@ -48,7 +48,7 @@
 
 **이후 개선**
 
--   워커 스레드 방식은 서버가 종료되면 진행 중인 검사가 유실됩니다. 이를 보완하기 위해 Outbox 패턴과 Redis Streams 기반 발행으로 확장했습니다.
+-   워커 스레드 방식은 서버가 종료되면 진행 중인 검사가 유실됩니다. 이를 보완하는 Outbox 패턴과 Redis Streams 기반 발행 경로를 추가했고, 설정(`verification.publisher.type`)으로 선택할 수 있습니다. 기본값은 워커 스레드 방식입니다.
 
 ## Architecture
 
