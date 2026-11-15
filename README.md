@@ -1,68 +1,70 @@
-<h1 align="center">Welcome to Planet Rush 👋</h1>
-<div align="center">
+# Planet Rush
 
-![PlanetRush_192x192](https://github.com/user-attachments/assets/3dc0b2e4-20c4-49a1-b0b3-bb207dd20f37)
-
-### Planet Rush: 행성 챌린지 플랫폼
-
-<h4>Planet Rush는 사용자들이 다양한 카테고리의 챌린지에 참여하고 성장할 수 있는 플랫폼입니다.</h4>
+<div align='center'>
+    <img src='https://github.com/user-attachments/assets/3dc0b2e4-20c4-49a1-b0b3-bb207dd20f37' />
 </div>
 
-## 기술 스택
+## 주제
 
-  #### Frontend
-  <p>
-    <img src="https://img.shields.io/badge/-React-61DAFB?style=flat-square&logo=React&logoColor=black"/>
-    <img src="https://img.shields.io/static/v1?style=flat-square&message=PWA&color=5A0FC8&logo=PWA&logoColor=FFFFFF&label="/>
-    <img src="https://img.shields.io/badge/node.js-339933?style=flat-square&logo=Node.js&logoColor=white"/>
-  </p>
+-   사진 인증 기반 그룹 챌린지 서비스
+-   2024.07 ~ 2024.08 | 6인 팀 | 백엔드
 
-  #### Backend
-  <p>
-    <img src="https://img.shields.io/badge/-SpringBoot-6DB33F?style=flat-square&logo=Spring&logoColor=white"/>
-    <img src="https://img.shields.io/badge/Spring_data_jpa-6DB33F?style=flat-square&logo=Spring&logoColor=white"/>
-    <img src="https://img.shields.io/badge/-Flask-000000?style=flat-square&logo=flask&logoColor=white"/>
-    <img src="https://img.shields.io/badge/-MySQL-4479A1?style=flat-square&logo=MySQL&logoColor=white"/>
-    <img src="https://img.shields.io/badge/-Redis-DC382D?style=flat-square&logo=Redis&logoColor=white"/>
-    <img src="https://img.shields.io/badge/-MongoDB-13aa52?style=flat-square&logo=mongodb&logoColor=white"/>
-  </p>
-  
-  #### Infra
-  <p>
-    <img src="https://img.shields.io/badge/-Docker-2496ED?style=flat-square&logo=Docker&logoColor=white"/>
-    <img src="https://img.shields.io/badge/-Jenkins-D24939?style=flat-square&logo=Jenkins&logoColor=white"/>
-    <img src="https://img.shields.io/badge/-AWS-232F3E?style=flat-square&logo=amazon-aws&logoColor=white"/>
-    <img src="https://img.shields.io/badge/-Nginx-269539?style=flat-square&logo=Nginx&logoColor=white"/>
-    <img src="https://img.shields.io/badge/Ubuntu-E95420?style=flat-square&logo=Ubuntu&logoColor=white"/>
-    <img src="https://img.shields.io/badge/AWS_S3-569A31?logo=amazons3&logoColor=fff&style=flat-square"/>
-    <img src="https://img.shields.io/badge/Gunicorn-499848?style=flat-square&logo=Gunicorn&logoColor=white">
-  </p>
+## 주요 기여
 
-  #### Tools
-  <p>
-    <img src="https://img.shields.io/badge/Jira-0052CC?style=flat-square&logo=Jira&logoColor=white"/>
-    <img src="https://img.shields.io/badge/-Swagger-%23Clojure?style=flat-square&logo=swagger&logoColor=white"/>
-    <img src="https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white"/>
-    <img src="https://img.shields.io/badge/git-%23F05033.svg?style=flat-square&logo=git&logoColor=white"/>
-    <img src="https://img.shields.io/badge/Testcontainers-2C2255?style=flat-square&logo=docker&logoColor=white"/>
-  </p>
+### 1. 동시 요청 환경의 데이터 정합성 확보
 
-> 통합 테스트는 Docker 런타임(Docker Desktop / OrbStack / Colima 등)을 요구합니다. 자세한 셋업과 컨테이너 재사용 옵션은 [`specs/001-secure-logging-test-foundation/quickstart.md`](specs/001-secure-logging-test-foundation/quickstart.md) 참조.
+**문제**
 
+-   챌린지(행성) 가입과 탈퇴 요청이 동시에 들어오면, 챌린지에 기록된 참여 인원이 실제 참여 정보와 어긋났습니다.
+-   같은 요청이 중복으로 들어오면 그대로 두 번 처리되었습니다.
 
-### 아키텍처
+**해결**
 
-<img width="1058" height="709" alt="image" src="https://github.com/user-attachments/assets/540d3085-a284-4cf7-861d-35e2ff0336d9" />
+-   비관적 락으로 정원 확인과 인원 갱신을 직렬화했습니다.
+-   참여 정보 변경과 인원 갱신을 하나의 트랜잭션으로 묶었습니다.
+-   Redis 멱등키로 동일한 요청의 중복 처리를 막았습니다.
 
-### ERD (Entity Relationship Diagram)
+**결과**
 
-![erd](https://github.com/user-attachments/assets/0cb2fd31-1354-41c8-a166-36c5839faab1)
+-   1,000명 동시 요청 시나리오에서 참여 인원 불일치 없이 처리되는 것을 확인했습니다.
 
+### 2. 사진 인증 비동기 처리와 장애 대응
 
-### 주요 기능
+**문제**
 
-- 행성(챌린지) 생성 및 행성 커스텀
-- 챌린지 참여도로 랭킹 산정
-- 인증 사진 업로드 및 AI로 유사도 검증
-- 카테고리별 사용자 통계 분석
-- 매주 인기 키워드 분석
+-   인증 API가 이미지 유사도 판별 서버(Flask)를 동기 HTTP로 호출해, 판별 결과가 돌아올 때까지 요청 스레드가 대기했습니다.
+-   외부 서버의 처리 시간과 네트워크 지연이 인증 API 응답 시간에 그대로 포함되었습니다.
+-   판별 서버 호출이 일시적으로 실패하면 인증 요청도 함께 실패했습니다.
+
+**해결**
+
+-   인증 접수와 이미지 검사를 분리했습니다. 요청에는 접수 결과를 먼저 반환하고, 판별 서버 호출은 워커 스레드에서 수행합니다.
+-   검사가 끝나면 Spring 내부 이벤트를 발행하고, 이벤트 리스너가 결과를 데이터베이스에 저장합니다.
+-   판별 서버의 일시적 실패에는 지수 백오프 기반 재시도(최대 5회)를 적용했습니다.
+
+**결과**
+
+-   인증 API 응답 시간을 4초에서 0.3초로 단축했습니다.
+
+**이후 개선**
+
+-   워커 스레드 방식은 서버가 종료되면 진행 중인 검사가 유실됩니다. 이를 보완하는 Outbox 패턴과 Redis Streams 기반 발행 경로를 추가했고, 설정(`verification.publisher.type`)으로 선택할 수 있습니다. 기본값은 워커 스레드 방식입니다.
+
+## Architecture
+
+<div align='center'>
+  <img src='docs/architecture.png' >
+</div>
+
+-   원본: [`docs/architecture.drawio`](docs/architecture.drawio)
+
+## ERD
+
+<div align='center'>
+  <img src='https://github.com/user-attachments/assets/0cb2fd31-1354-41c8-a166-36c5839faab1' >
+</div>
+
+## 테스트
+
+-   통합 테스트는 Docker 런타임(Docker Desktop / OrbStack / Colima 등)이 필요
+-   셋업과 컨테이너 재사용 옵션: [`specs/001-secure-logging-test-foundation/quickstart.md`](specs/001-secure-logging-test-foundation/quickstart.md)
