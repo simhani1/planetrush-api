@@ -14,12 +14,7 @@ public interface VerificationService {
 	String getStandardImgUrlByPlanetId(Long planetId);
 
 	/**
-	 * 사진 url과 유사도, 인증 여부를 저장합니다.
-	 *
-	 * <p>Spec 005 — R-008. 본 메서드는 기존 동기 흐름의 {@code SaveVerificationResultEvent}
-	 * 리스너로 호출되었으나, Phase 3 의 신규 비동기 흐름이 도입되면 {@code SaveVerificationResultEvent}
-	 * 는 publish 되지 않는 dead path 가 된다. 코드 자체는 호환 안전 마진을 위해 유지하되, 운영
-	 * 트래픽은 즉시 {@code VerificationResultService.handleCallback} 경로로 전환된다.
+	 * 워커 스레드의 유사도 검사 결과를 저장합니다 ({@code verification.publisher.type=async-event} 경로).
 	 *
 	 * @param event 유사도 측정 후 결과가 담긴 이벤트
 	 */

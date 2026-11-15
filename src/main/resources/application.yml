@@ -84,7 +84,7 @@ scheduled-task:
 
 verification:
   publisher:
-    type: redis-stream  # http -> RestClient를 사용한 api 호출
+    type: redis-stream  # redis-stream: 컨슈머 callback / async-event: @Async 워커 + Spring 내부 이벤트 / http: 동기 호출
   redis:
     stream-key: verify:requests   # Spec 005 — 컨슈머 계약(BRIEF §3-1, contracts/stream-message.md)과 정합
   # Spec 005 — 컨슈머 callback 외부화. dev/prod 는 환경변수로 override.

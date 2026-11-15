@@ -18,10 +18,10 @@ import com.planetrush.planetrush.verification.domain.VerificationRecord;
 import com.planetrush.planetrush.verification.domain.VerificationRequest;
 import com.planetrush.planetrush.verification.event.SaveVerificationResultEvent;
 import com.planetrush.planetrush.verification.exception.AlreadyVerifiedException;
-import com.planetrush.planetrush.verification.repository.VerificationRecordRepository;
 import com.planetrush.planetrush.verification.repository.VerificationRequestRepository;
 import com.planetrush.planetrush.verification.repository.custom.VerificationRecordRepositoryCustom;
 import com.planetrush.planetrush.verification.service.dto.VerificationAcceptedDto;
+import com.planetrush.planetrush.verification.service.dto.VerificationCallbackCommand;
 import com.planetrush.planetrush.verification.service.dto.VerificationDto;
 
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class VerificationServiceImpl implements VerificationService {
 
 	private final MemberRepository memberRepository;
 	private final PlanetRepository planetRepository;
-	private final VerificationRecordRepository verificationRecordRepository;
+	private final VerificationResultService verificationResultService;
 	private final VerificationRecordRepositoryCustom verificationRecordRepositoryCustom;
 	private final VerificationRequestRepository verificationRequestRepository;
 	private final VerificationExternalEventRecorder verificationExternalEventRecorder;
@@ -73,9 +73,9 @@ public class VerificationServiceImpl implements VerificationService {
 	 *   <li>{@code VerificationAcceptedDto(requestId, PENDING)} 즉시 반환.</li>
 	 * </ol>
 	 *
-	 * <p><b>R-008 cutover</b>: 기존 {@code eventService.publish(VerificationEvent)} 호출을 제거했다.
-	 * 더 이상 Flask 동기 경로(`AsyncVerificationProcessor` + `SaveVerificationResultEvent`) 가
-	 * 트리거되지 않는다. 잔여 dead path 코드는 회귀 안전 마진 후 별도 PR 에서 cleanup.
+	 * <p>커밋 후 발행 방식은 {@code verification.publisher.type} 이 정한다 — {@code redis-stream}
+	 * (컨슈머 callback) 또는 {@code async-event}({@code AsyncVerificationProcessor} 워커 +
+	 * {@code SaveVerificationResultEvent}).
 	 */
 	@Transactional
 	@Override
@@ -127,20 +127,16 @@ public class VerificationServiceImpl implements VerificationService {
 	@Transactional
 	@Override
 	public void saveVerificationResult(SaveVerificationResultEvent event) {
-		// Spec 005 R-008 — 본 메서드는 Flask 동기 경로의 dead path 다. 신규 비동기 흐름은
-		// VerificationResultService.handleCallback 가 record 저장을 담당한다. 호환 안전 마진을
-		// 위해 코드는 유지하되, verifyTodayChallenge 가 더 이상 SaveVerificationResultEvent 를
-		// publish 하지 않으므로 본 리스너는 호출되지 않는다.
-		Member member = memberRepository.findById(event.getMemberId())
-			.orElseThrow(() -> new MemberNotFoundException("Member not found with ID: " + event.getMemberId()));
-		Planet planet = planetRepository.findById(event.getPlanetId())
-			.orElseThrow(() -> new PlanetNotFoundException("Planet not found with ID: " + event.getPlanetId()));
-		verificationRecordRepository.save(VerificationRecord.builder()
-			.verified(event.isVerified())
-			.planet(planet)
-			.member(member)
-			.similarityScore(event.getSimilarityScore())
-			.imgUrl(event.getVerificationImgUrl())
-			.build());
+		// 워커 스레드(async-event 경로)의 검사 결과를 저장한다. 상태 전이·멱등·record 저장 규칙은
+		// 컨슈머 callback 과 동일해야 하므로 VerificationResultService 에 위임한다.
+		// 클래스 기본값이 readOnly 이므로 쓰기 트랜잭션을 여기서 명시한다.
+		// Flask 점수(double)는 VerificationRequest 계약(정수)에 맞춰 반올림한다.
+		verificationResultService.handleCallback(new VerificationCallbackCommand(
+			event.requestId(),
+			event.similarityScore() == null ? null : (int)Math.round(event.similarityScore()),
+			event.verified(),
+			event.error(),
+			null
+		));
 	}
 }
